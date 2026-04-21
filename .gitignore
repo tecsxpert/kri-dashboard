@@ -1,0 +1,55 @@
+# ==========================
+# Git Ignore — KRI Dashboard
+# ==========================
+
+# Environment secrets — NEVER commit this
+.env
+
+# Java build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+
+# Python / AI Service
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+chroma_data/
+*.egg-info/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage reports
+target/site/
+
+# Docker volumes (local data)
+postgres_data/
+redis_data/
