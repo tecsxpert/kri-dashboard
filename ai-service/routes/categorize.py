@@ -30,4 +30,4 @@ Text: {user_input}
     return {
         "input": user_input,
         "category": result.strip()
-    }
+    } 

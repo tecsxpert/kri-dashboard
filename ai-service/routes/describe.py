@@ -32,4 +32,17 @@ Topic: {user_input}
             "risk_level": "Unknown"
         }
 
+
+    risk_map = {
+        "Low": 3,
+        "Medium": 6,
+        "High": 9
+    }
+
+    risk_level = parsed.get("risk_level", "Unknown").capitalize()
+
+    parsed["risk_level"] = risk_level
+    parsed["risk_score"] = risk_map.get(risk_level, 0)
+    parsed["risk_label"] = f"{risk_level} Risk"
+
     return parsed
