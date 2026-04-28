@@ -11,7 +11,17 @@ def recommend():
     if not user_input:
         return {"error": "Input required"}, 400
 
-    prompt = f"Give 3 recommendations for: {user_input}"
+    prompt = f"""
+Give EXACTLY 3 recommendations for the topic below.
+
+Rules:
+- Return only bullet points
+- Each point max 1 line
+- No explanation
+- No extra text
+
+Topic: {user_input}
+"""
 
     result = generate_response(prompt)
 

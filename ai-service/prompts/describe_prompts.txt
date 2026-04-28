@@ -1,4 +1,8 @@
 prompt = f"""
-Give a short professional description (5-6 lines only) for:
-{user_input}
+Give output ONLY in JSON format with:
+- title
+- description (max 5 lines)
+- risk_level (Low, Medium, High)
+
+Topic: {user_input}
 """

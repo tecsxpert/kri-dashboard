@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request
 from services.groq_client import generate_response
 
@@ -11,11 +12,24 @@ def describe():
     if not user_input:
         return {"error": "Input required"}, 400
 
-    prompt = f"Generate a professional description for: {user_input}"
+    prompt = f"""
+Give output ONLY in JSON format with:
+- title
+- description (max 5 lines)
+- risk_level (Low, Medium, High)
+
+Topic: {user_input}
+"""
 
     result = generate_response(prompt)
 
-    return {
-        "input": user_input,
-        "description": result
-    }
+    try:
+        parsed = json.loads(result)
+    except:
+        parsed = {
+            "title": user_input,
+            "description": result,
+            "risk_level": "Unknown"
+        }
+
+    return parsed

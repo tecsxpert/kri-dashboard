@@ -11,11 +11,23 @@ def categorize():
     if not user_input:
         return {"error": "Input required"}, 400
 
-    prompt = f"Classify this into category: {user_input}"
+    prompt = f"""
+Classify the following text into ONLY ONE category.
+
+Choose from:
+Cybersecurity, Financial, Operational, Compliance
+
+Rules:
+- Return ONLY the category name
+- No explanation
+- No extra text
+
+Text: {user_input}
+"""
 
     result = generate_response(prompt)
 
     return {
         "input": user_input,
-        "category": result
+        "category": result.strip()
     }
