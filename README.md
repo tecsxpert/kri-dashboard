@@ -78,10 +78,15 @@ The system provides:
 This project is a complete AI-powered KRI Dashboard that analyzes risks and provides intelligent insights through a web interface.
 
 ##  My Role
+
 AI Developer 1
+
 Developed backend APIs using Flask
+
 Integrated Groq API for AI-based responses
+
 Implemented risk classification and scoring logic
+
 Built and tested dashboard functionality
 
 ##  Developed By
