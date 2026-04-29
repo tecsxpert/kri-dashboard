@@ -11,32 +11,19 @@ def dashboard():
     if not risks:
         return {"error": "Risks required"}, 400
 
+    risk_map = {"Low": 3, "Medium": 6, "High": 9}
 
-    risk_map = {
-        "Low": 3,
-        "Medium": 6,
-        "High": 9
-    }
-
-    labels = []
-    scores = []
+    results = []
 
     for r in risks:
-    
-        response = generate_response(
-         f"""
-         Classify the risk into Low, Medium, or High based on severity.
+        
+        response = generate_response(f"""
+Classify the risk into Low, Medium, or High based on severity.
 
-         Examples:
-         - Minor issue → Low
-         -Moderate impact → Medium
-         - Serious threats (fraud, cyber attack, data breach) → High
+Risk: {r}
 
-         Risk: {r}
-
-         Answer ONLY one word: Low, Medium, or High.
-         """
-         )
+Answer only one word: Low, Medium, or High.
+""")
 
         response = response.strip().lower()
 
@@ -44,17 +31,34 @@ def dashboard():
             level = "High"
         elif "medium" in response:
             level = "Medium"
-        elif "low" in response:
-            level = "Low"
         else:
-            level = "Low"  # default fallback
+            level = "Low"
 
-        score = risk_map.get(level, 0)
+        score = risk_map[level]
 
-        labels.append(r)
-        scores.append(score)
+        
+        category = generate_response(f"""
+Classify this risk into one category:
+Cybersecurity, Financial, Operational
 
-    return {
-        "labels": labels,
-        "scores": scores
-    }
+Risk: {r}
+
+Answer only one word.
+""").strip()
+
+        # 🔹 Recommendation
+        recommendation = generate_response(f"""
+Give one short recommendation to reduce this risk:
+
+Risk: {r}
+""").strip()
+
+        results.append({
+            "risk": r,
+            "level": level,
+            "score": score,
+            "category": category,
+            "recommendation": recommendation
+        })
+
+    return {"results": results}

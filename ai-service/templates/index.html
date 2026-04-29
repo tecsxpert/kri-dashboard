@@ -2,27 +2,20 @@
 <html>
 <head>
     <title>KRI Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <h2>KRI Risk Dashboard</h2>
 
 <input type="text" id="risks" placeholder="Enter risks comma separated">
-<button id="btn">Analyze</button>
+<button onclick="analyze()">Analyze</button>
 
 <br><br>
 
-<canvas id="myChart" width="400" height="200"></canvas>
+<div id="result"></div>
 
 <script>
-let chart;
-
-document.getElementById("btn").addEventListener("click", analyze);
-
 async function analyze() {
-    console.log("Clicked");
-
     let input = document.getElementById("risks").value;
 
     if (!input) {
@@ -33,7 +26,7 @@ async function analyze() {
     let risks = input.split(",");
 
     try {
-        let response = await fetch("http://127.0.0.1:5000/dashboard", {
+        let response = await fetch("/dashboard", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -42,43 +35,27 @@ async function analyze() {
         });
 
         let data = await response.json();
-        console.log("Data:", data);
+        console.log(data);
 
-        const canvas = document.getElementById("myChart");
+        let output = "<h3>Results:</h3>";
 
-        if (!canvas) {
-            console.error("Canvas not found");
-            return;
-        }
-
-        const ctx = canvas.getContext("2d");
-
-        if (chart) {
-            chart.destroy();
-        }
-
-        chart = new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: "Risk Score",
-                    data: data.scores,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
+        data.results.forEach(r => {
+            output += `
+                <p>
+                <b>${r.risk}</b><br>
+                Level: ${r.level}<br>
+                Score: ${r.score}<br>
+                Category: ${r.category}<br>
+                Recommendation: ${r.recommendation}
+                </p><hr>
+            `;
         });
 
+        document.getElementById("result").innerHTML = output;
+
     } catch (error) {
-        console.error("Error:", error);
+        console.error(error);
+        alert("Error occurred");
     }
 }
 </script>
