@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KRI Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>KRI Risk Dashboard</h2>
+
+<input type="text" id="risks" placeholder="Enter risks comma separated">
+<button id="btn">Analyze</button>
+
+<br><br>
+
+<canvas id="myChart" width="400" height="200"></canvas>
+
+<script>
+let chart;
+
+document.getElementById("btn").addEventListener("click", analyze);
+
+async function analyze() {
+    console.log("Clicked");
+
+    let input = document.getElementById("risks").value;
+
+    if (!input) {
+        alert("Enter risks");
+        return;
+    }
+
+    let risks = input.split(",");
+
+    try {
+        let response = await fetch("http://127.0.0.1:5000/dashboard", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ risks: risks })
+        });
+
+        let data = await response.json();
+        console.log("Data:", data);
+
+        const canvas = document.getElementById("myChart");
+
+        if (!canvas) {
+            console.error("Canvas not found");
+            return;
+        }
+
+        const ctx = canvas.getContext("2d");
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "Risk Score",
+                    data: data.scores,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+</script>
+
+</body>
+</html>
