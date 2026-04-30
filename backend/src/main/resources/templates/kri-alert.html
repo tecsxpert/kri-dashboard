@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>KRI Alert Notification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; padding: 30px; }
+        .wrapper { max-width: 600px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white; padding: 28px 32px; border-radius: 12px 12px 0 0;
+        }
+        .header h1 { font-size: 22px; font-weight: 700; }
+        .header p  { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+        .body { background: #ffffff; padding: 32px; border: 1px solid #e2e8f0; }
+        .alert-box {
+            border-left: 4px solid #dc2626; background: #fef2f2;
+            padding: 16px 20px; border-radius: 6px; margin-bottom: 24px;
+        }
+        .alert-box.near-breach { border-color: #d97706; background: #fffbeb; }
+        .alert-box.active      { border-color: #16a34a; background: #f0fdf4; }
+        .alert-box h2 { font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+        .alert-box p  { font-size: 13px; color: #475569; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+        td:first-child { font-weight: 600; color: #475569; width: 140px; }
+        td:last-child  { color: #1e293b; }
+        .badge {
+            display: inline-block; padding: 3px 12px; border-radius: 999px;
+            font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .BREACH      { background: #fee2e2; color: #dc2626; }
+        .NEAR_BREACH { background: #fef3c7; color: #d97706; }
+        .ACTIVE      { background: #dcfce7; color: #16a34a; }
+        .INACTIVE    { background: #f1f5f9; color: #64748b; }
+        .score-bar   { height: 8px; background: #e2e8f0; border-radius: 4px; margin-top: 6px; }
+        .score-fill  { height: 8px; background: #2563eb; border-radius: 4px; }
+        .footer {
+            background: #f8fafc; padding: 18px 32px; border-radius: 0 0 12px 12px;
+            border: 1px solid #e2e8f0; border-top: none; text-align: center;
+            font-size: 12px; color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <!-- Header -->
+    <div class="header">
+        <h1>⚠️ KRI Alert Notification</h1>
+        <p>KRI Dashboard — Automated Risk Monitoring System</p>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+        <div class="alert-box">
+            <h2>A Key Risk Indicator requires your immediate attention</h2>
+            <p>The following KRI has been flagged based on its current status and score.</p>
+        </div>
+
+        <table>
+            <tr>
+                <td>KRI Name</td>
+                <td th:text="${kri.name}">KRI Name</td>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td>
+                    <span class="badge" th:classappend="${kri.status}" th:text="${kri.status}">STATUS</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Score</td>
+                <td>
+                    <span th:text="${kri.score} + ' / 100'">0 / 100</span>
+                    <div class="score-bar">
+                        <div class="score-fill" th:style="'width:' + ${kri.score} + '%'"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Description</td>
+                <td th:text="${kri.description != null ? kri.description : 'No description provided.'}">...</td>
+            </tr>
+            <tr>
+                <td>KRI ID</td>
+                <td th:text="${kri.id}">#</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        This is an automated alert from the <strong>KRI Dashboard</strong> system.<br/>
+        Please do not reply to this email. Contact your risk manager for further action.
+    </div>
+</div>
+</body>
+</html>
