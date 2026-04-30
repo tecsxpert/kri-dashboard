@@ -6,6 +6,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import RiskList from "./pages/RiskList";
+import RiskForm from "./pages/RiskForm";
 
 function App() {
   return (
@@ -19,6 +20,8 @@ function App() {
 
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/risks" element={<RiskList />} />
+        <Route path="/create-risk" element={<RiskForm />} />
+        <Route path="/edit-risk/:id" element={<RiskForm />} />
 
       </Routes>
     </BrowserRouter>
