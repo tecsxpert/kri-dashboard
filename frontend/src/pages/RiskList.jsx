@@ -34,7 +34,7 @@ export default function RiskList() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Load filters from URL
+  // Load from URL
   useEffect(() => {
     setSearch(params.get("q") || "");
     setStatus(params.get("status") || "");
@@ -92,24 +92,51 @@ export default function RiskList() {
     }
   };
 
+  // CSV Export
+  const handleExport = async () => {
+    try {
+      const res = await API.get("/export", {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "risks.csv");
+      document.body.appendChild(link);
+      link.click();
+    } catch (err) {
+      console.error("Export failed", err);
+    }
+  };
+
   return (
     <div className="bg-[#E3F2FD] min-h-screen">
       <Navbar />
 
       <div className="p-6">
 
-        {/* 🔹 TITLE + CREATE */}
+        {/* 🔹 TITLE + ACTIONS */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-[#1B4F8A]">
             Risk List
           </h2>
 
-          <button
-            onClick={() => navigate("/create-risk")}
-            className="bg-[#1B4F8A] text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            + Create Risk
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleExport}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Export CSV
+            </button>
+
+            <button
+              onClick={() => navigate("/create-risk")}
+              className="bg-[#1B4F8A] text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              + Create Risk
+            </button>
+          </div>
         </div>
 
         {/* 🔍 FILTER BAR */}
@@ -173,16 +200,10 @@ export default function RiskList() {
           <table className="w-full bg-white rounded-xl shadow">
             <thead className="bg-blue-200">
               <tr>
-                <th onClick={() => handleSort("id")} className="cursor-pointer">
-                  ID 🔽
-                </th>
-                <th onClick={() => handleSort("name")} className="cursor-pointer">
-                  Name 🔽
-                </th>
+                <th onClick={() => handleSort("id")} className="cursor-pointer">ID 🔽</th>
+                <th onClick={() => handleSort("name")} className="cursor-pointer">Name 🔽</th>
                 <th>Status</th>
-                <th onClick={() => handleSort("score")} className="cursor-pointer">
-                  Score 🔽
-                </th>
+                <th onClick={() => handleSort("score")} className="cursor-pointer">Score 🔽</th>
                 <th>Date</th>
                 <th>Action</th>
               </tr>
@@ -198,7 +219,6 @@ export default function RiskList() {
                   <td className="p-2">{r.id}</td>
                   <td>{r.name}</td>
 
-                  {/* Status badge */}
                   <td>
                     <span
                       className={`px-2 py-1 rounded text-white text-sm ${
@@ -216,7 +236,6 @@ export default function RiskList() {
                   <td>{r.score}</td>
                   <td>{r.date}</td>
 
-                  {/* Edit button */}
                   <td>
                     <button
                       onClick={(e) => {
