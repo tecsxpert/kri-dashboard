@@ -1,0 +1,10 @@
+What is Python used for in AI?
+Explain machine learning simply
+What is deep learning?
+Difference between AI and ML
+What is FastAPI?
+What is ChromaDB?
+What is RAG system?
+Why do we use embeddings?
+What is Groq LLM?
+Explain vector database
