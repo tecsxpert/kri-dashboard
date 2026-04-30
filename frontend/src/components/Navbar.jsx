@@ -10,28 +10,14 @@ export default function Navbar() {
 
   return (
     <div className="bg-[#1B4F8A] text-white px-6 py-4 flex justify-between items-center shadow-md">
-      <h1 className="text-lg font-bold tracking-wide">
-        KRI Dashboard
-      </h1>
+      <h1 className="text-lg font-bold">KRI Dashboard</h1>
 
       <div className="flex gap-6 items-center">
-        <Link
-          to="/dashboard"
-          className="hover:text-blue-200 transition"
-        >
-          Dashboard
-        </Link>
-
-        <Link
-          to="/risks"
-          className="hover:text-blue-200 transition"
-        >
-          Risks
-        </Link>
-
+        <Link to="/dashboard" className="hover:text-blue-200">Dashboard</Link>
+        <Link to="/risks" className="hover:text-blue-200">Risks</Link>
         <button
           onClick={handleLogout}
-          className="bg-blue-400 px-3 py-1 rounded hover:bg-blue-300 text-white"
+          className="bg-blue-400 px-3 py-1 rounded hover:bg-blue-300"
         >
           Logout
         </button>

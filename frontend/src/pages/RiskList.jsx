@@ -1,72 +1,60 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
 import API from "../services/api";
 
 export default function RiskList() {
   const [risks, setRisks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch data when page loads
   useEffect(() => {
     fetchRisks();
   }, []);
 
   const fetchRisks = async () => {
     try {
-      const res = await API.get("/risks"); // backend API
+      const res = await API.get("/risks");
       setRisks(res.data);
     } catch (err) {
-      console.error("Error fetching data", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔄 LOADING STATE
-  if (loading) {
-    return (
-      <div className="p-4">
-        <p className="text-gray-500">Loading data...</p>
-      </div>
-    );
-  }
-
-  // 📭 EMPTY STATE
-  if (risks.length === 0) {
-    return (
-      <div className="p-4">
-        <p className="text-gray-500">No data available</p>
-      </div>
-    );
-  }
-
-  // 📊 TABLE VIEW
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Risk List</h2>
+    <div className="bg-[#E3F2FD] min-h-screen">
+      <Navbar />
 
-      <table className="w-full border border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">ID</th>
-            <th className="p-2 border">Name</th>
-            <th className="p-2 border">Status</th>
-            <th className="p-2 border">Score</th>
-            <th className="p-2 border">Date</th>
-          </tr>
-        </thead>
+      <div className="p-6">
+        <h2 className="text-2xl font-bold text-[#1B4F8A] mb-4">Risk List</h2>
 
-        <tbody>
-          {risks.map((risk) => (
-            <tr key={risk.id}>
-              <td className="p-2 border">{risk.id}</td>
-              <td className="p-2 border">{risk.name}</td>
-              <td className="p-2 border">{risk.status}</td>
-              <td className="p-2 border">{risk.score}</td>
-              <td className="p-2 border">{risk.date}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {loading && <p>Loading...</p>}
+
+        {!loading && risks.length === 0 && <p>No data</p>}
+
+        {!loading && risks.length > 0 && (
+          <table className="w-full bg-white rounded shadow">
+            <thead className="bg-blue-200">
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {risks.map((r) => (
+                <tr key={r.id} className="text-center border-t">
+                  <td>{r.id}</td>
+                  <td>{r.name}</td>
+                  <td>{r.status}</td>
+                  <td>{r.score}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
