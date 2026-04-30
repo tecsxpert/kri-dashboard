@@ -1,94 +1,243 @@
-# KRI Dashboard
+# AI Service (KRI Dashboard Backend)
 
-##  Project Overview
-This project is an AI-powered Key Risk Indicator (KRI) Dashboard designed to analyze risks and provide intelligent insights.  
-It uses AI to classify risks, assign scores, categorize them, and generate recommendations.
+## Overview
 
+This is the AI backend service for the KRI Dashboard.
+It provides APIs for risk analysis, recommendations, categorization, and report generation using AI.
 
+---
 
-##  Technologies Used
-- Python (Flask)
-- Groq API (LLM)
-- HTML, JavaScript
-- Chart.js (for visualization)
+## Prerequisites
 
+* Python 3.8+
+* pip (Python package manager)
 
+---
 
-##  Features
-- AI-based risk classification (Low, Medium, High)
-- Risk scoring system
-- Risk categorization (Cybersecurity, Financial, Operational)
-- AI-generated recommendations
-- Interactive dashboard UI
-- End-to-end integration (Frontend + Backend)
+## Installation
 
+1. Clone the repository:
 
+```bash
+git clone <your-repo-url>
+cd ai-service
+```
 
-##  My Implementation (Day 1–10)
+2. Install dependencies:
 
-- Developed Flask-based backend APIs
-- Integrated Groq API for AI responses
-- Built multiple endpoints:
-  - `/describe`
-  - `/recommend`
-  - `/categorize`
-  - `/analyze`
-  - `/dashboard`
-- Implemented risk scoring logic
-- Enhanced system with category and recommendation features
-- Designed frontend dashboard using HTML & JavaScript
-- Integrated frontend with backend APIs
-- Performed testing using curl and browser
-- Completed full system integration
+```bash
+pip install -r requirements.txt
+```
 
+---
 
-## How to Run
+## Environment Variables
 
-1. Navigate to project folder:
+Create a `.env` file in the root:
 
-   cd ai-service
+```env
+GROQ_API_KEY=your_api_key_here
+```
 
-2. Run the server:
+---
 
-   python app.py
+## Run the Service
 
+```bash
+python app.py
+```
 
-3. Open browser:
+Open in browser:
 
-   http://127.0.0.1:5000/
+```
+http://127.0.0.1:5000/
+```
 
+---
 
-##  Sample Input
+## 🔌 API Endpoints
 
-Cybersecurity risk, Financial fraud, Server downtime
+### 1. Health Check
 
+**GET /health**
 
-##  Output
+Response:
 
-The system provides:
+```json
+{ "status": "ok" }
+```
 
-* Risk Level (Low, Medium, High)
-* Risk Score
-* Category
-* Recommendation
+---
 
+### 2. Describe Risk
 
-##  Final Outcome
+**POST /describe**
 
-This project is a complete AI-powered KRI Dashboard that analyzes risks and provides intelligent insights through a web interface.
+Request:
 
-##  My Role
+```json
+{ "text": "Cybersecurity risk" }
+```
 
-AI Developer 1
+Response:
 
-Developed backend APIs using Flask
+```json
+{
+  "title": "...",
+  "description": "...",
+  "risk_level": "High",
+  "generated_at": "timestamp"
+}
+```
 
-Integrated Groq API for AI-based responses
+---
 
-Implemented risk classification and scoring logic
+### 3. Recommend Actions
 
-Built and tested dashboard functionality
+**POST /recommend**
 
-##  Developed By
+Request:
+
+```json
+{ "text": "Improve cybersecurity" }
+```
+
+Response:
+
+```json
+{
+  "recommendations": [
+    {
+      "action_type": "Prevention",
+      "description": "...",
+      "priority": "High"
+    }
+  ]
+}
+```
+
+---
+
+### 4. Categorize Risk
+
+**POST /categorize**
+
+Request:
+
+```json
+{ "text": "Phishing attack" }
+```
+
+Response:
+
+```json
+{ "category": "Cybersecurity" }
+```
+
+---
+
+### 5. Dashboard Analysis
+
+**POST /dashboard**
+
+Request:
+
+```json
+{ "risks": ["Cyber risk", "Fraud"] }
+```
+
+Response:
+
+```json
+{
+  "results": [...]
+}
+```
+
+---
+
+### 6. Generate Report
+
+**POST /generate-report**
+
+Request:
+
+```json
+{ "risks": ["Cyber risk"] }
+```
+
+Response:
+
+```json
+{
+  "title": "...",
+  "executive_summary": "...",
+  "overview": "...",
+  "top_items": [],
+  "recommendations": []
+}
+```
+
+---
+
+### 7. Analyse Document
+
+**POST /analyse-document**
+
+Request:
+
+```json
+{ "text": "System has vulnerabilities" }
+```
+
+Response:
+
+```json
+{
+  "findings": [
+    {
+      "type": "Risk",
+      "description": "...",
+      "severity": "High"
+    }
+  ]
+}
+```
+
+---
+
+### 8. Batch Process
+
+**POST /batch-process**
+
+Request:
+
+```json
+{
+  "items": ["Risk1", "Risk2"]
+}
+```
+
+Response:
+
+```json
+{
+  "results": [
+    { "input": "Risk1", "result": "..." }
+  ]
+}
+```
+
+---
+
+## Notes
+
+* All AI responses are generated using Groq API
+* Ensure API key is valid
+* Use JSON format for all requests
+
+---
+
+## Author
 
 Chaithanya V
