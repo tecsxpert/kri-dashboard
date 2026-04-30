@@ -1,28 +1,95 @@
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import API from "../services/api";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer
+} from "recharts";
 
 export default function Dashboard() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await API.get("/stats");
+      setStats(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <p className="p-6">Loading dashboard...</p>;
+  }
+
   return (
     <div className="bg-[#E3F2FD] min-h-screen">
       <Navbar />
 
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-[#1B4F8A] mb-4">Dashboard</h2>
+        <h2 className="text-2xl font-bold text-[#1B4F8A] mb-6">
+          Dashboard
+        </h2>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded shadow">
-            <p>Total Risks</p>
-            <h3 className="text-xl text-blue-600">24</h3>
+        {/* 🔹 KPI CARDS */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-4 rounded-xl shadow">
+            <p className="text-gray-500">Total Risks</p>
+            <h3 className="text-xl font-bold text-blue-600">
+              {stats.total}
+            </h3>
           </div>
 
-          <div className="bg-white p-4 rounded shadow">
-            <p>High Risks</p>
-            <h3 className="text-xl text-red-500">5</h3>
+          <div className="bg-white p-4 rounded-xl shadow">
+            <p className="text-gray-500">High Risk</p>
+            <h3 className="text-xl font-bold text-red-500">
+              {stats.high}
+            </h3>
           </div>
 
-          <div className="bg-white p-4 rounded shadow">
-            <p>Resolved</p>
-            <h3 className="text-xl text-green-500">12</h3>
+          <div className="bg-white p-4 rounded-xl shadow">
+            <p className="text-gray-500">Medium Risk</p>
+            <h3 className="text-xl font-bold text-yellow-500">
+              {stats.medium}
+            </h3>
           </div>
+
+          <div className="bg-white p-4 rounded-xl shadow">
+            <p className="text-gray-500">Low Risk</p>
+            <h3 className="text-xl font-bold text-green-500">
+              {stats.low}
+            </h3>
+          </div>
+        </div>
+
+        {/* 📊 BAR CHART */}
+        <div className="bg-white p-6 rounded-xl shadow">
+          <h3 className="text-lg font-bold text-[#1B4F8A] mb-4">
+            Risks by Status
+          </h3>
+
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={stats.byStatus}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#1B4F8A" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
