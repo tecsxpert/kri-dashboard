@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from flask import Blueprint, request
 from services.groq_client import generate_response
 
@@ -13,14 +14,20 @@ def describe():
         return {"error": "Input required"}, 400
 
     prompt = f"""
-Give output ONLY in JSON format with:
-- title
-- description (max 5 lines)
-- risk_level (Low, Medium, High)
+You are a professional risk analyst.
 
-Topic: {user_input}
+Analyze the given risk and generate structured output.
+Risk: {user_input}
+
+Return ONLY JSON:
+{{
+  "title": "Short professional title",
+  "description": "Clear and concise explanation",
+  "risk_level": "Low/Medium/High"
+}}
+
+Do not add any extra text outside JSON.
 """
-
     result = generate_response(prompt)
 
     try:
@@ -32,17 +39,5 @@ Topic: {user_input}
             "risk_level": "Unknown"
         }
 
-
-    risk_map = {
-        "Low": 3,
-        "Medium": 6,
-        "High": 9
-    }
-
-    risk_level = parsed.get("risk_level", "Unknown").capitalize()
-
-    parsed["risk_level"] = risk_level
-    parsed["risk_score"] = risk_map.get(risk_level, 0)
-    parsed["risk_label"] = f"{risk_level} Risk"
-
+    parsed["generated_at"] = datetime.now().isoformat()
     return parsed

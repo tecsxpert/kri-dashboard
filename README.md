@@ -4,7 +4,7 @@
 This project is an AI-powered Key Risk Indicator (KRI) Dashboard designed to analyze risks and provide intelligent insights.  
 It uses AI to classify risks, assign scores, categorize them, and generate recommendations.
 
----
+
 
 ##  Technologies Used
 - Python (Flask)
@@ -12,7 +12,7 @@ It uses AI to classify risks, assign scores, categorize them, and generate recom
 - HTML, JavaScript
 - Chart.js (for visualization)
 
----
+
 
 ##  Features
 - AI-based risk classification (Low, Medium, High)
@@ -22,7 +22,7 @@ It uses AI to classify risks, assign scores, categorize them, and generate recom
 - Interactive dashboard UI
 - End-to-end integration (Frontend + Backend)
 
----
+
 
 ##  My Implementation (Day 1–10)
 
