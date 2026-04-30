@@ -1,105 +1,76 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from chroma_db import seed_data, query_category
-
-from groq import Groq
-from dotenv import load_dotenv
-import os
-
-# Load .env file
-load_dotenv()
+import time
+import chromadb
+from collections import deque
 
 app = FastAPI()
 
-# Seed ChromaDB data once
-seed_data()
+# ----------------------------
+# BASIC METRICS STORAGE
+# ----------------------------
+start_time = time.time()
 
-# Groq client
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# last 10 response times
+response_times = deque(maxlen=10)
 
+# simple cache
+cache = {}
 
-# ---------------------------
-# REQUEST MODEL
-# ---------------------------
-class InputText(BaseModel):
-    text: str
+MODEL_NAME = "groq-llama-model"
 
+# ----------------------------
+# CHROMA DB CLIENT (FIXED)
+# ----------------------------
+# IMPORTANT: use correct persistent path
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
-# ---------------------------
-# OLD ENDPOINT
-# ---------------------------
-@app.post("/categorise")
-def categorise(data: InputText):
+collection = chroma_client.get_or_create_collection(name="default")
 
-    result = query_category(data.text)
-    doc = result["documents"][0][0]
+# ----------------------------
+# MIDDLEWARE: TRACK RESPONSE TIME
+# ----------------------------
+@app.middleware("http")
+async def add_process_time_header(request, call_next):
+    start = time.time()
 
-    return {
-        "input": data.text,
-        "matched_text": doc,
-        "confidence": 0.9,
-        "reasoning": "Matched using ChromaDB semantic search"
+    response = await call_next(request)
+
+    process_time = time.time() - start
+    response_times.append(process_time)
+
+    return response
+
+# ----------------------------
+# HEALTH ENDPOINT (TASK 7 FINAL)
+# ----------------------------
+@app.get("/health")
+def health():
+
+    # avg response time (last 10 requests)
+    avg_response_time = (
+        sum(response_times) / len(response_times)
+        if response_times else 0
+    )
+
+    # ChromaDB document count
+    try:
+        doc_count = collection.count()
+    except Exception:
+        doc_count = 0
+
+    # uptime
+    uptime_seconds = time.time() - start_time
+
+    # cache stats
+    cache_stats = {
+        "size": len(cache),
+        "keys": list(cache.keys())[:5]
     }
 
-
-# ---------------------------
-# DAY 5 RAG ENDPOINT
-# ---------------------------
-@app.post("/query")
-def query(data: InputText):
-
-    try:
-        # STEP 1: Retrieve from ChromaDB
-        result = query_category(data.text)
-
-        docs = result["documents"][0] if result.get("documents") else []
-
-        # safety check (IMPORTANT)
-        if not docs:
-            return {
-                "question": data.text,
-                "answer": "No relevant context found in database.",
-                "sources": []
-            }
-
-        context = "\n".join(docs)
-
-        # STEP 2: Check API key
-        if not os.getenv("GROQ_API_KEY"):
-            return {
-                "error": "GROQ_API_KEY not found in .env"
-            }
-
-        # STEP 3: Call Groq LLM
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an AI assistant. Answer only using the given context."
-                },
-                {
-                    "role": "user",
-                    "content": f"""
-Context:
-{context}
-
-Question:
-{data.text}
-"""
-                }
-            ]
-        )
-
-        answer = response.choices[0].message.content
-
-        return {
-            "question": data.text,
-            "answer": answer,
-            "sources": [{"text": doc} for doc in docs]
-        }
-
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
+    return {
+        "model_name": MODEL_NAME,
+        "avg_response_time_last_10": round(avg_response_time, 4),
+        "chroma_doc_count": doc_count,
+        "uptime_seconds": round(uptime_seconds, 2),
+        "cache_stats": cache_stats
+    }
