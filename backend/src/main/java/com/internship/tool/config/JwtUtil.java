@@ -38,8 +38,15 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token, String username) {
-        final String tokenUsername = extractUsername(token);
-        return tokenUsername.equals(username) && !isTokenExpired(token);
+        try {
+            final String tokenUsername = extractUsername(token);
+            if (tokenUsername == null || username == null) {
+                return false;
+            }
+            return username.equals(tokenUsername) && !isTokenExpired(token);
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public Claims extractAllClaims(String token) {

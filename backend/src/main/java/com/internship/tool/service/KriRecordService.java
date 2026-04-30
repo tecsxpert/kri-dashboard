@@ -17,9 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class KriRecordService {
 
     private final KriRecordRepository kriRecordRepository;
+    private final EmailService emailService;
 
-    public KriRecordService(KriRecordRepository kriRecordRepository) {
+    public KriRecordService(KriRecordRepository kriRecordRepository,
+                            EmailService emailService) {
         this.kriRecordRepository = kriRecordRepository;
+        this.emailService = emailService;
     }
 
     // ------------------------------------------------------------------ //
@@ -45,7 +48,12 @@ public class KriRecordService {
             throw new BadRequestException("A record with title '" + request.getTitle() + "' already exists");
         });
 
-        return kriRecordRepository.save(request);
+        KriRecord saved = kriRecordRepository.save(request);
+
+        // Notify on creation only — overdue detection is handled by the scheduler
+        emailService.sendCreateNotification(saved);
+
+        return saved;
     }
 
     // ------------------------------------------------------------------ //
