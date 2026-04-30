@@ -1,31 +1,24 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from chroma_db import seed_data, query_category
 
 app = FastAPI()
+
+seed_data()
 
 class InputText(BaseModel):
     text: str
 
 @app.post("/categorise")
 def categorise(data: InputText):
-    text = data.text.lower()
 
-    if "cricket" in text or "football" in text:
-        return {
-            "category": "sports",
-            "confidence": 0.95,
-            "reasoning": "Detected sports-related keywords"
-        }
+    result = query_category(data.text)
 
-    if "ai" in text or "python" in text:
-        return {
-            "category": "technology",
-            "confidence": 0.95,
-            "reasoning": "Detected tech-related keywords"
-        }
+    doc = result["documents"][0][0]
 
     return {
-        "category": "unknown",
-        "confidence": 0.5,
-        "reasoning": "No strong match found"
+        "input": data.text,
+        "matched_text": doc,
+        "confidence": 0.9,
+        "reasoning": "Matched using ChromaDB semantic search"
     }
