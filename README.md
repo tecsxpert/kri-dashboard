@@ -1,159 +1,110 @@
-# KRI Dashboard — Backend API
+# KRI Dashboard — Backend
 
-> **Tool-08 | Java Developer 2 | Spring Boot 3.2 | PostgreSQL | Redis | JWT**
-
-A comprehensive **Key Risk Indicator (KRI) Dashboard** REST API built with Spring Boot, featuring JWT authentication, Redis caching, email notifications, AOP audit logging, and Flyway database migrations.
+A production-ready Spring Boot REST API for managing **Key Risk Indicator (KRI)** records, with JWT authentication, Redis caching, email notifications, file attachments, and scheduled overdue alerts.
 
 ---
 
-## 📋 Project Overview
+## Tech Stack
 
-| Property       | Value                          |
-|----------------|--------------------------------|
-| Developer      | Varad (Java Developer 2)       |
-| Branch         | `varad-java-dev2`              |
-| Framework      | Spring Boot 3.2.5              |
-| Java Version   | Java 17                        |
-| Database       | PostgreSQL                     |
-| Cache          | Redis                          |
-| Auth           | JWT (JJWT 0.12.5)              |
-| Docs           | Swagger / OpenAPI 3            |
-| Migration      | Flyway                         |
-
----
-
-## 🗓️ Development Timeline
-
-| Day   | Task                                      | Status |
-|-------|-------------------------------------------|--------|
-| Day 1 | Project setup, Flyway V1 migration (`kri` table), base structure | ✅ Done |
-| Day 2 | Entity layer, Repository, DTOs, Exception handling | ✅ Done |
-| Day 3 | Service layer (KriService), REST Controller, Swagger config | ✅ Done |
-| Day 4 | JWT Security — UserEntity, AuthController, SecurityConfig | ✅ Done |
-| Day 5 | Redis caching, Email alerts, Thymeleaf template, Scheduler | ✅ Done |
-| Day 6 | AOP Audit logging, Unit tests, README, final polish | ✅ Done |
+| Layer | Technology |
+|---|---|
+| Language | Java 17 |
+| Framework | Spring Boot 3.2.5 |
+| Build | Maven |
+| Database | PostgreSQL |
+| Migrations | Flyway |
+| Cache | Redis |
+| Auth | JWT (JJWT 0.12.x) |
+| Email | JavaMailSender + Thymeleaf |
+| File Storage | Local filesystem |
+| Documentation | SpringDoc OpenAPI (Swagger UI) |
+| Testing | JUnit 5 + Mockito + MockMvc |
 
 ---
 
-## 🏗️ Project Structure
+## Architecture
 
 ```
-backend/
-└── src/main/java/com/internship/tool/
-    ├── ToolApplication.java        # Entry point
-    ├── config/
-    │   ├── SecurityConfig.java     # Spring Security + JWT
-    │   ├── JwtAuthFilter.java      # JWT request filter
-    │   ├── OpenApiConfig.java      # Swagger UI config
-    │   ├── RedisConfig.java        # Redis cache manager
-    │   └── AuditAspect.java        # AOP audit logging
-    ├── controller/
-    │   ├── KriController.java      # KRI CRUD endpoints
-    │   └── AuthController.java     # Register / Login endpoints
-    ├── dto/
-    │   ├── KriRequest.java         # KRI create/update body
-    │   ├── KriResponse.java        # KRI response body
-    │   ├── AuthRequest.java        # Login request
-    │   ├── AuthResponse.java       # JWT token response
-    │   └── RegisterRequest.java    # Registration request
-    ├── entity/
-    │   ├── AuditableEntity.java    # Base audit timestamps
-    │   ├── Kri.java                # KRI JPA entity
-    │   ├── User.java               # User JPA entity
-    │   └── Role.java               # Role enum
-    ├── exception/
-    │   ├── GlobalExceptionHandler.java
-    │   ├── ResourceNotFoundException.java
-    │   └── ErrorResponse.java
-    ├── repository/
-    │   ├── KriRepository.java
-    │   └── UserRepository.java
-    ├── scheduler/
-    │   └── KriScheduler.java       # Daily breach check + hourly stats
-    └── service/
-        ├── KriService.java
-        ├── UserService.java
-        ├── EmailService.java
-        ├── JwtService.java
-        └── impl/
-            ├── KriServiceImpl.java
-            ├── UserServiceImpl.java
-            └── EmailServiceImpl.java
+┌──────────────────────────────────────────────────────┐
+│                     REST Clients                     │
+│          (Browser / Postman / Frontend)              │
+└────────────────────────┬─────────────────────────────┘
+                         │  HTTP
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│              Spring Boot Application                  │
+│                                                      │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────┐  │
+│  │  Controller │→ │   Service    │→ │ Repository │  │
+│  │   Layer     │  │    Layer     │  │   Layer    │  │
+│  └─────────────┘  └──────┬───────┘  └─────┬──────┘  │
+│        ↑                 │                │          │
+│  JWT Filter         ┌────┴──────┐   ┌─────┴──────┐  │
+│  (Security)         │   Redis   │   │ PostgreSQL │  │
+│                     │  (Cache)  │   │  (Flyway)  │  │
+│                     └───────────┘   └────────────┘  │
+│                                                      │
+│  ┌───────────────┐  ┌──────────────────────────────┐ │
+│  │ Email Service │  │  Overdue Scheduler (hourly)  │ │
+│  │  (Thymeleaf) │  └──────────────────────────────┘ │
+│  └───────────────┘                                   │
+└──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🚀 API Endpoints
-
-### 🔐 Authentication
-| Method | Endpoint                  | Description        | Auth Required |
-|--------|---------------------------|--------------------|---------------|
-| POST   | `/api/v1/auth/register`   | Register new user  | ❌ No         |
-| POST   | `/api/v1/auth/login`      | Login, get JWT     | ❌ No         |
-
-### 📊 KRI Management
-| Method | Endpoint                     | Description                  | Auth Required |
-|--------|------------------------------|------------------------------|---------------|
-| POST   | `/api/v1/kri`                | Create new KRI               | ✅ Yes        |
-| GET    | `/api/v1/kri`                | Get all KRIs                 | ✅ Yes        |
-| GET    | `/api/v1/kri/{id}`           | Get KRI by ID                | ✅ Yes        |
-| GET    | `/api/v1/kri/status/{status}`| Get KRIs by status           | ✅ Yes        |
-| GET    | `/api/v1/kri/at-risk`        | Get BREACH/NEAR_BREACH KRIs  | ✅ Yes        |
-| PUT    | `/api/v1/kri/{id}`           | Update KRI                   | ✅ Yes        |
-| DELETE | `/api/v1/kri/{id}`           | Delete KRI                   | ✅ Yes        |
-
----
-
-## ⚙️ Setup & Run
+## Setup Steps
 
 ### Prerequisites
+
 - Java 17+
-- PostgreSQL 15+
-- Redis 7+
 - Maven 3.8+
+- PostgreSQL 14+
+- Redis 6+
 
 ### 1. Clone the repository
+
 ```bash
-git clone https://github.com/varadsure362-cmyk/kri-dashboard.git
-cd kri-dashboard/backend
+git clone <your-fork-url>
+cd kri-dashboard
 ```
 
-### 2. Configure environment variables
-Copy `.env.example` to `.env` and fill in your values:
-```env
-DB_USERNAME=postgres
-DB_PASSWORD=yourpassword
-JWT_SECRET=your-base64-secret
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
+### 2. Set environment variables
+
+Copy and fill the values (see table below):
+
+```bash
+export DB_URL=jdbc:postgresql://localhost:5432/kri_db
+export DB_USERNAME=postgres
+export DB_PASSWORD=yourpassword
+export REDIS_HOST=localhost
+export REDIS_PORT=6379
+export MAIL_HOST=smtp.gmail.com
+export MAIL_PORT=587
+export MAIL_USERNAME=your@email.com
+export MAIL_PASSWORD=yourapppassword
+export MAIL_FROM=your@email.com
+export MAIL_TO_ADMIN=admin@email.com
+export JWT_SECRET=<base64-encoded-256-bit-secret>
+export UPLOADS_DIR=uploads
 ```
 
-### 3. Create PostgreSQL database
+### 3. Create the PostgreSQL database
+
 ```sql
 CREATE DATABASE kri_db;
 ```
 
 ### 4. Run the application
+
 ```bash
+cd backend
 mvn spring-boot:run
 ```
 
-### 5. Access Swagger UI
-```
-http://localhost:8080/swagger-ui.html
-```
+The app will auto-seed 30 demo records on first startup.
 
----
-
-## 🔑 Authentication Flow
-
-1. **Register** → `POST /api/v1/auth/register`
-2. **Login** → `POST /api/v1/auth/login` → receive JWT token
-3. **Use token** → Add `Authorization: Bearer <token>` header to all protected requests
-
----
-
-## 🧪 Running Tests
+### 5. Run tests
 
 ```bash
 mvn test
@@ -161,20 +112,85 @@ mvn test
 
 ---
 
-## 📦 Key Dependencies
+## Environment Variables
 
-| Dependency         | Purpose                      |
-|--------------------|------------------------------|
-| Spring Boot 3.2.5  | Core framework               |
-| Spring Data JPA    | ORM / database access        |
-| PostgreSQL Driver  | Database connectivity        |
-| Flyway             | Database migrations          |
-| Spring Security    | Authentication & authorization|
-| JJWT 0.12.5        | JWT token generation         |
-| Spring Data Redis  | Caching layer                |
-| Spring Mail        | Email notifications          |
-| Thymeleaf          | Email templates              |
-| SpringDoc OpenAPI  | Swagger UI                   |
-| Lombok             | Boilerplate reduction        |
-| Spring AOP         | Audit logging                |
-| JaCoCo             | Code coverage reports        |
+| Variable | Required | Description | Example |
+|---|---|---|---|
+| `DB_URL` | ✅ | PostgreSQL JDBC URL | `jdbc:postgresql://localhost:5432/kri_db` |
+| `DB_USERNAME` | ✅ | Database username | `postgres` |
+| `DB_PASSWORD` | ✅ | Database password | `secret` |
+| `REDIS_HOST` | ✅ | Redis hostname | `localhost` |
+| `REDIS_PORT` | ✅ | Redis port | `6379` |
+| `MAIL_HOST` | ✅ | SMTP server host | `smtp.gmail.com` |
+| `MAIL_PORT` | ✅ | SMTP server port | `587` |
+| `MAIL_USERNAME` | ✅ | SMTP login username | `you@gmail.com` |
+| `MAIL_PASSWORD` | ✅ | SMTP login password / app password | `apppassword` |
+| `MAIL_FROM` | ✅ | Sender email address | `no-reply@kri.internal` |
+| `MAIL_TO_ADMIN` | ✅ | Admin recipient for notifications | `admin@kri.internal` |
+| `JWT_SECRET` | ✅ | Base64-encoded HS256 secret (≥256 bit) | `YWJj...` |
+| `UPLOADS_DIR` | ❌ | File upload directory (default: `uploads`) | `/var/uploads` |
+
+---
+
+## API Endpoints
+
+**Base URL:** `http://localhost:8080`
+
+| Method | Path | Description | Auth |
+|---|---|---|---|
+| `GET` | `/api/kri/all` | Get all KRI records (paginated) | 🔒 |
+| `GET` | `/api/kri/{id}` | Get KRI record by ID | 🔒 |
+| `POST` | `/api/kri/create` | Create a new KRI record | 🔒 |
+| `POST` | `/api/files/upload` | Upload a file (pdf/jpg/jpeg/png, max 10 MB) | 🔒 |
+| `GET` | `/api/files/{filename}` | Download an uploaded file | 🔒 |
+
+> 🔒 = Requires `Authorization: Bearer <JWT>` header  
+> `/auth/**` endpoints are public (not yet implemented — Day 6+)
+
+---
+
+## Swagger UI
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+API spec (JSON):
+
+```
+http://localhost:8080/v3/api-docs
+```
+
+---
+
+## Project Structure
+
+```
+backend/
+├── pom.xml
+└── src/main/
+    ├── java/com/internship/tool/
+    │   ├── ToolApplication.java
+    │   ├── config/          # Security, JWT, Redis, OpenAPI, DataLoader
+    │   ├── controller/      # REST controllers
+    │   ├── dto/             # Request/Response DTOs
+    │   ├── entity/          # JPA entities
+    │   ├── exception/       # Custom exceptions + GlobalExceptionHandler
+    │   ├── repository/      # Spring Data JPA repositories
+    │   ├── scheduler/       # Scheduled tasks (overdue notifier)
+    │   └── service/         # Business logic + Email + File services
+    └── resources/
+        ├── application.yml
+        ├── db/migration/    # Flyway SQL scripts
+        └── templates/       # Thymeleaf email templates
+```
+
+---
+
+## Key Design Decisions
+
+- **Stateless auth** — JWT-based, no server-side sessions
+- **Redis caching** — 10-minute TTL, auto-evicted on writes, sort-aware cache keys
+- **Email failures are non-blocking** — `MessagingException` is caught and logged; record save is not rolled back
+- **Overdue detection** — runs hourly via `@Scheduled`, not inline in create flow
+- **File safety** — path-traversal prevention via `StringUtils.cleanPath` + resolved-path boundary check; explicit 10 MB size check independent of servlet config

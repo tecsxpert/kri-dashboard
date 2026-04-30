@@ -1,39 +1,44 @@
 package com.internship.tool.config;
 
-import io.swagger.v3.oas.models.*;
-import io.swagger.v3.oas.models.info.*;
-import io.swagger.v3.oas.models.security.*;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * OpenAPI / Swagger UI configuration.
- * Accessible at: http://localhost:8080/swagger-ui.html
- */
+import java.util.List;
+
 @Configuration
+@OpenAPIDefinition
+@SecurityScheme(
+        name        = "bearerAuth",
+        type        = SecuritySchemeType.HTTP,
+        scheme      = "bearer",
+        bearerFormat = "JWT",
+        description = "Paste your JWT token (without 'Bearer ' prefix). Obtain it from POST /auth/login."
+)
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI openAPI() {
+    public OpenAPI kriDashboardOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
                         .title("KRI Dashboard API")
-                        .description("Key Risk Indicator Dashboard — Spring Boot REST API\n\n" +
-                                "Use the /api/v1/auth/login endpoint to get a JWT token, " +
-                                "then click 'Authorize' and enter: Bearer <your-token>")
-                        .version("1.0.0")
+                        .version("v1")
+                        .description("Backend REST APIs for the KRI Dashboard application. " +
+                                     "Provides endpoints for managing KRI records, " +
+                                     "file attachments, and authentication.")
                         .contact(new Contact()
-                                .name("Varad — Java Developer 2")
-                                .email("varad@internship.com"))
-                        .license(new License().name("MIT")))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Auth"))
-                .components(new Components()
-                        .addSecuritySchemes("Bearer Auth",
-                                new SecurityScheme()
-                                        .name("Bearer Auth")
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                                        .description("Enter your JWT token")));
+                                .name("KRI Dashboard Team")
+                                .email("support@kridashboard.internal")))
+                .servers(List.of(
+                        new Server()
+                                .url("http://localhost:8080")
+                                .description("Local development server")
+                ));
     }
 }
