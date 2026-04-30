@@ -8,20 +8,55 @@ import Dashboard from "./pages/Dashboard";
 import RiskList from "./pages/RiskList";
 import RiskForm from "./pages/RiskForm";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
+        {/* 🔓 Public Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/risks" element={<RiskList />} />
-        <Route path="/create-risk" element={<RiskForm />} />
-        <Route path="/edit-risk/:id" element={<RiskForm />} />
+        {/* 🔐 Protected Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/risks"
+          element={
+            <ProtectedRoute>
+              <RiskList />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/create-risk"
+          element={
+            <ProtectedRoute>
+              <RiskForm />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/edit-risk/:id"
+          element={
+            <ProtectedRoute>
+              <RiskForm />
+            </ProtectedRoute>
+          }
+        />
 
       </Routes>
     </BrowserRouter>

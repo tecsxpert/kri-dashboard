@@ -1,23 +1,43 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout(); // remove token + update state
     navigate("/");
   };
 
   return (
     <div className="bg-[#1B4F8A] text-white px-6 py-4 flex justify-between items-center shadow-md">
-      <h1 className="text-lg font-bold">KRI Dashboard</h1>
+      {/* Logo */}
+      <h1 className="text-lg font-bold tracking-wide">
+        KRI Dashboard
+      </h1>
 
+      {/* Navigation Links */}
       <div className="flex gap-6 items-center">
-        <Link to="/dashboard" className="hover:text-blue-200">Dashboard</Link>
-        <Link to="/risks" className="hover:text-blue-200">Risks</Link>
+        <Link
+          to="/dashboard"
+          className="hover:text-blue-200 transition"
+        >
+          Dashboard
+        </Link>
+
+        <Link
+          to="/risks"
+          className="hover:text-blue-200 transition"
+        >
+          Risks
+        </Link>
+
+        {/* Logout */}
         <button
           onClick={handleLogout}
-          className="bg-blue-400 px-3 py-1 rounded hover:bg-blue-300"
+          className="bg-blue-400 px-3 py-1 rounded hover:bg-blue-300 transition"
         >
           Logout
         </button>
