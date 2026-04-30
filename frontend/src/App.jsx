@@ -4,9 +4,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+
 import Dashboard from "./pages/Dashboard";
 import RiskList from "./pages/RiskList";
 import RiskForm from "./pages/RiskForm";
+import RiskDetail from "./pages/RiskDetail";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -15,48 +17,32 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* 🔓 Public Routes */}
+        {/* Public */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* 🔐 Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+        {/* Protected */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
 
-        <Route
-          path="/risks"
-          element={
-            <ProtectedRoute>
-              <RiskList />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/risks" element={
+          <ProtectedRoute><RiskList /></ProtectedRoute>
+        } />
 
-        <Route
-          path="/create-risk"
-          element={
-            <ProtectedRoute>
-              <RiskForm />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/create-risk" element={
+          <ProtectedRoute><RiskForm /></ProtectedRoute>
+        } />
 
-        <Route
-          path="/edit-risk/:id"
-          element={
-            <ProtectedRoute>
-              <RiskForm />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/edit-risk/:id" element={
+          <ProtectedRoute><RiskForm /></ProtectedRoute>
+        } />
+
+        <Route path="/risks/:id" element={
+          <ProtectedRoute><RiskDetail /></ProtectedRoute>
+        } />
 
       </Routes>
     </BrowserRouter>
