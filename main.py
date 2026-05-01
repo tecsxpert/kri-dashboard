@@ -6,6 +6,9 @@ import redis
 import hashlib
 import json
 import random
+import uuid
+import threading
+import requests
 
 app = FastAPI()
 
@@ -41,6 +44,11 @@ cache_misses = 0
 # ----------------------------
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_or_create_collection(name="default")
+
+# ----------------------------
+# JOB STORE (DAY 11)
+# ----------------------------
+jobs = {}
 
 # ----------------------------
 # HELPERS
@@ -79,7 +87,7 @@ def ask(q: str, fresh: bool = False):
     request_start = time.time()
     cache_key = get_cache_key(q)
 
-    # CHECK CACHE
+    # CACHE CHECK
     if not fresh and redis_client:
         cached = redis_client.get(cache_key)
         if cached:
@@ -90,22 +98,22 @@ def ask(q: str, fresh: bool = False):
                 "meta": generate_meta(request_start, cached=True)
             }
 
-    # AI RESPONSE (IMPROVED SIMULATION FOR HIGH SCORE)
+    # AI RESPONSE (IMPROVED)
     answer = f"""
-Here is a detailed explanation:
+Detailed Explanation:
 
 {q} is an important concept in computer science and AI systems.
 
-Simple explanation:
-- It is widely used in real-world applications
-- It helps developers understand system behavior
-- It improves problem-solving skills
+Key Points:
+- Widely used in real applications
+- Helps in understanding system design
+- Useful for interviews and projects
 
 Example:
-You can learn {q} by building small projects or APIs.
+You can practice {q} by building small APIs or mini projects.
 
 Summary:
-Understanding {q} helps you grow technical knowledge step by step.
+Understanding {q} improves your technical knowledge step by step.
 """
 
     # STORE CACHE
@@ -150,3 +158,62 @@ def health():
         "uptime_seconds": round(uptime_seconds, 2),
         "cache_stats": cache_stats
     }
+
+# ----------------------------
+# DAY 11: BACKGROUND JOB WORKER
+# ----------------------------
+def process_report(job_id: str, data: dict):
+    time.sleep(5)  # simulate heavy processing
+
+    result = {
+        "status": "completed",
+        "report": f"Generated report for {data['text']}"
+    }
+
+    jobs[job_id] = result
+
+    # webhook call
+    try:
+        requests.post("http://127.0.0.1:8001/webhook", json={
+            "job_id": job_id,
+            "result": result
+        })
+    except:
+        print("Webhook failed")
+
+# ----------------------------
+# DAY 11: GENERATE REPORT API
+# ----------------------------
+@app.post("/generate-report")
+def generate_report(payload: dict):
+    job_id = str(uuid.uuid4())
+
+    jobs[job_id] = {
+        "status": "processing"
+    }
+
+    thread = threading.Thread(
+        target=process_report,
+        args=(job_id, payload)
+    )
+    thread.start()
+
+    return {
+        "job_id": job_id,
+        "status": "started"
+    }
+
+# ----------------------------
+# JOB STATUS API
+# ----------------------------
+@app.get("/report-status/{job_id}")
+def get_status(job_id: str):
+    return jobs.get(job_id, {"error": "job not found"})
+
+# ----------------------------
+# WEBHOOK ENDPOINT
+# ----------------------------
+@app.post("/webhook")
+def webhook(data: dict):
+    print("Webhook received:", data)
+    return {"ok": True}
