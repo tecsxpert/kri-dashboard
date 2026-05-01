@@ -11,7 +11,8 @@ import java.util.List;
 
 /**
  * Spring Data JPA repository for KRI entities.
- * Day 7: Added paginated search, name filter, score-range queries.
+ * Day 7 : Added paginated search, name filter, score-range queries.
+ * Day 10: Added analytics aggregate queries.
  */
 @Repository
 public interface KriRepository extends JpaRepository<Kri, Long> {
@@ -27,9 +28,6 @@ public interface KriRepository extends JpaRepository<Kri, Long> {
 
     // ── Day 7: Pagination & Filtering ─────────────────────────────────────────
 
-    /**
-     * Dynamic paginated search supporting optional name (ILIKE), status, and score range filters.
-     */
     @Query("""
             SELECT k FROM Kri k
             WHERE (:name   IS NULL OR LOWER(k.name)   LIKE LOWER(CONCAT('%', :name, '%')))
@@ -45,13 +43,28 @@ public interface KriRepository extends JpaRepository<Kri, Long> {
             Pageable pageable
     );
 
-    /**
-     * Fetch all KRIs for CSV export — no pagination.
-     */
     @Query("""
             SELECT k FROM Kri k
             WHERE (:status IS NULL OR k.status = :status)
             ORDER BY k.id ASC
             """)
     List<Kri> findAllForExport(@Param("status") String status);
+
+    // ── Day 10: Analytics Queries ─────────────────────────────────────────────
+
+    /** Count KRIs grouped by status → returns Object[]{status, count} rows */
+    @Query("SELECT k.status, COUNT(k) FROM Kri k GROUP BY k.status")
+    List<Object[]> countGroupedByStatus();
+
+    /** Average score of all KRIs */
+    @Query("SELECT COALESCE(AVG(k.score), 0) FROM Kri k")
+    double findAverageScore();
+
+    /** Count KRIs with status BREACH or NEAR_BREACH */
+    @Query("SELECT COUNT(k) FROM Kri k WHERE k.status IN ('BREACH', 'NEAR_BREACH')")
+    long countAtRisk();
+
+    /** Top N KRIs by score descending */
+    @Query("SELECT k FROM Kri k ORDER BY k.score DESC")
+    List<Kri> findTopByScore(Pageable pageable);
 }

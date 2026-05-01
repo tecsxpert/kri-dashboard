@@ -4,63 +4,45 @@ import com.internship.tool.dto.*;
 import com.internship.tool.service.KriService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
- * REST Controller for KRI (Key Risk Indicator) CRUD, pagination, and export.
+ * REST Controller for KRI management with Role-Based Access Control.
  * Base URL: /api/v1/kri
- * Day 7: Added /search (paginated) and /export/csv endpoints.
+ *
+ * Day 9 — RBAC:
+ *   ROLE_ADMIN : full access (CREATE, READ, UPDATE, DELETE, EXPORT)
+ *   ROLE_USER  : read-only (GET, SEARCH, EXPORT)
  */
 @RestController
 @RequestMapping("/api/v1/kri")
 @RequiredArgsConstructor
 @Tag(name = "KRI Management", description = "APIs for managing Key Risk Indicators")
+@SecurityRequirement(name = "bearerAuth")
 public class KriController {
 
     private final KriService kriService;
 
-    // ── CRUD ──────────────────────────────────────────────────────────────────
+    // ── Write operations — ADMIN only ─────────────────────────────────────────
 
     @PostMapping
-    @Operation(summary = "Create a new KRI")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a new KRI  [ADMIN only]")
     public ResponseEntity<KriResponse> create(@Valid @RequestBody KriRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(kriService.create(request));
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get a KRI by its ID")
-    public ResponseEntity<KriResponse> getById(
-            @Parameter(description = "KRI ID") @PathVariable Long id) {
-        return ResponseEntity.ok(kriService.findById(id));
-    }
-
-    @GetMapping
-    @Operation(summary = "Get all KRIs")
-    public ResponseEntity<List<KriResponse>> getAll() {
-        return ResponseEntity.ok(kriService.findAll());
-    }
-
-    @GetMapping("/status/{status}")
-    @Operation(summary = "Get KRIs by status (ACTIVE, INACTIVE, BREACH, NEAR_BREACH)")
-    public ResponseEntity<List<KriResponse>> getByStatus(
-            @Parameter(description = "KRI Status") @PathVariable String status) {
-        return ResponseEntity.ok(kriService.findByStatus(status));
-    }
-
-    @GetMapping("/at-risk")
-    @Operation(summary = "Get all at-risk KRIs (BREACH or NEAR_BREACH)")
-    public ResponseEntity<List<KriResponse>> getAtRisk() {
-        return ResponseEntity.ok(kriService.findAtRisk());
-    }
-
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing KRI")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update an existing KRI  [ADMIN only]")
     public ResponseEntity<KriResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody KriRequest request) {
@@ -68,17 +50,50 @@ public class KriController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a KRI by ID")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete a KRI by ID  [ADMIN only]")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         kriService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    // ── Read operations — ADMIN or USER ──────────────────────────────────────
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Get a KRI by its ID")
+    public ResponseEntity<KriResponse> getById(
+            @Parameter(description = "KRI ID") @PathVariable Long id) {
+        return ResponseEntity.ok(kriService.findById(id));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Get all KRIs")
+    public ResponseEntity<List<KriResponse>> getAll() {
+        return ResponseEntity.ok(kriService.findAll());
+    }
+
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Get KRIs by status (ACTIVE, INACTIVE, BREACH, NEAR_BREACH)")
+    public ResponseEntity<List<KriResponse>> getByStatus(
+            @Parameter(description = "KRI Status") @PathVariable String status) {
+        return ResponseEntity.ok(kriService.findByStatus(status));
+    }
+
+    @GetMapping("/at-risk")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Get all at-risk KRIs (BREACH or NEAR_BREACH)")
+    public ResponseEntity<List<KriResponse>> getAtRisk() {
+        return ResponseEntity.ok(kriService.findAtRisk());
+    }
+
     // ── Day 7: Pagination & Search ────────────────────────────────────────────
 
     @GetMapping("/search")
-    @Operation(summary = "Paginated search with optional name/status/score filters",
-               description = "Query params: name, status, minScore, maxScore, page (0-based), size, sortBy, sortDir")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Paginated search with optional name/status/score filters")
     public ResponseEntity<PagedKriResponse> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String status,
@@ -90,14 +105,10 @@ public class KriController {
             @RequestParam(defaultValue = "asc") String sortDir) {
 
         KriFilterRequest filter = KriFilterRequest.builder()
-                .name(name)
-                .status(status)
-                .minScore(minScore)
-                .maxScore(maxScore)
-                .page(page)
-                .size(size)
-                .sortBy(sortBy)
-                .sortDir(sortDir)
+                .name(name).status(status)
+                .minScore(minScore).maxScore(maxScore)
+                .page(page).size(size)
+                .sortBy(sortBy).sortDir(sortDir)
                 .build();
 
         return ResponseEntity.ok(kriService.search(filter));
@@ -106,8 +117,8 @@ public class KriController {
     // ── Day 7: CSV Export ─────────────────────────────────────────────────────
 
     @GetMapping("/export/csv")
-    @Operation(summary = "Export KRIs as CSV file",
-               description = "Optional query param: status (ACTIVE, INACTIVE, BREACH, NEAR_BREACH). Omit to export all.")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Export KRIs as CSV file")
     public ResponseEntity<byte[]> exportCsv(
             @RequestParam(required = false) String status) {
 
