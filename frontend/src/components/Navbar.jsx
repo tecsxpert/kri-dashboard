@@ -15,7 +15,7 @@ export default function Navbar() {
     <div className="bg-[#1B4F8A] text-white px-6 py-4 flex justify-between items-center shadow-md">
       {/* Logo */}
       <h1 className="text-lg font-bold tracking-wide">
-        KRI Dashboard
+        KRI DASHBOARD
       </h1>
 
       {/* Navigation Links */}
@@ -42,7 +42,7 @@ export default function Navbar() {
 
         {/* 📊 REPORT PAGE */}
         <Link to="/report" className="hover:text-blue-200">
-          Report
+          AI Report
         </Link>
 
         {/* 📄 SAMPLE RISK DETAIL (for demo only) */}
