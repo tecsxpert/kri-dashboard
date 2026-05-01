@@ -7,6 +7,7 @@ from routes.recommend import recommend_bp
 from routes.categorize import categorize_bp
 from routes.analyze import analyze_bp
 from routes.dashboard import dashboard_bp
+from routes.rag import rag_bp
 
 app = Flask(__name__)
 
@@ -15,6 +16,7 @@ app.register_blueprint(recommend_bp)
 app.register_blueprint(categorize_bp)
 app.register_blueprint(analyze_bp)
 app.register_blueprint(dashboard_bp)
+app.register_blueprint(rag_bp)
 
 @app.route("/")
 def home():

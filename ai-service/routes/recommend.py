@@ -1,4 +1,4 @@
-print("NEW RECOMMEND CODE RUNNING")
+
 import json
 from flask import Blueprint, request
 from services.groq_client import generate_response
@@ -24,7 +24,7 @@ def recommend():
         return parsed
 
     except:
-        # ✅ fallback (IMPORTANT)
+    
         return [
             {
                 "action_type": "Preventive",
