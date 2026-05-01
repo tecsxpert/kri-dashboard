@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import API from "../services/api";
+import { stats as mockStats } from "../data/mockData";
 
 import {
   BarChart,
@@ -20,19 +20,23 @@ export default function Dashboard() {
     fetchStats();
   }, []);
 
-  const fetchStats = async () => {
-    try {
-      const res = await API.get("/stats");
-      setStats(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
+  // ✅ NO API → USE MOCK DATA
+  const fetchStats = () => {
+    setTimeout(() => {
+      setStats(mockStats);
       setLoading(false);
-    }
+    }, 800); // small delay for realistic feel
   };
 
   if (loading) {
-    return <p className="p-6">Loading dashboard...</p>;
+    return (
+      <div className="bg-[#E3F2FD] min-h-screen">
+        <Navbar />
+        <p className="p-6 text-[#1B4F8A] font-medium">
+          Loading dashboard...
+        </p>
+      </div>
+    );
   }
 
   return (

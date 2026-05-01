@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import API from "../services/api";
+import { risks, aiResponse } from "../data/mockData";
+import { aiResponse } from "../data/mockData";
 
 export default function RiskDetail() {
   const { id } = useParams();
@@ -19,48 +20,30 @@ export default function RiskDetail() {
     fetchRisk();
   }, []);
 
-  const fetchRisk = async () => {
-    try {
-      const res = await API.get(`/risks/${id}`);
-      setRisk(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  // ✅ MOCK DATA FETCH
+  const fetchRisk = () => {
+    const found = risks.find((r) => r.id === Number(id));
+    setRisk(found);
+    setLoading(false);
   };
 
-  // 🤖 AI CALL
-  const handleAskAI = async () => {
-    setAiLoading(true);
-    setAiError(false);
+  // 🤖 AI (DUMMY)
+  const handleAskAI = () => {
+  setAiLoading(true);
+  setAiError(false);
 
-    try {
-      const res = await API.post("/ai/describe", {
-        text: risk.name,
-      });
-
-      setAiData(res.data);
-    } catch (err) {
-      console.error(err);
-      setAiError(true);
-    } finally {
-      setAiLoading(false);
-    }
+  setTimeout(() => {
+    setAiData(aiResponse); // dummy response
+    setAiLoading(false);
+  }, 1000);
   };
 
-  // ❌ DELETE
-  const handleDelete = async () => {
+  // ❌ DELETE (FRONTEND ONLY)
+  const handleDelete = () => {
     if (!confirm("Are you sure you want to delete?")) return;
 
-    try {
-      await API.delete(`/risks/${id}`);
-      alert("Deleted successfully");
-      navigate("/risks");
-    } catch (err) {
-      console.error(err);
-      alert("Delete failed");
-    }
+    alert("Deleted (dummy mode)");
+    navigate("/risks");
   };
 
   if (loading) return <p className="p-6">Loading...</p>;
@@ -72,12 +55,11 @@ export default function RiskDetail() {
 
       <div className="p-6 max-w-3xl mx-auto">
 
-        {/* 🔹 Title */}
         <h2 className="text-2xl font-bold text-[#1B4F8A] mb-4">
           Risk Details
         </h2>
 
-        {/* 🔹 MAIN CARD */}
+        {/* MAIN CARD */}
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-blue-100">
 
           <p className="mb-3">
@@ -107,18 +89,17 @@ export default function RiskDetail() {
             <strong>Date:</strong> {risk.date}
           </p>
 
-          {/* 🔘 ACTION BUTTONS */}
           <div className="flex gap-4 mt-4">
             <button
               onClick={() => navigate(`/edit-risk/${id}`)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
             >
               Edit
             </button>
 
             <button
               onClick={handleDelete}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+              className="bg-red-500 text-white px-4 py-2 rounded-lg"
             >
               Delete
             </button>
@@ -128,56 +109,26 @@ export default function RiskDetail() {
         {/* 🤖 AI PANEL */}
         <div className="bg-white p-6 rounded-2xl shadow-lg mt-6 border border-blue-100">
 
-          <h3 className="text-xl font-bold text-[#1B4F8A] mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-[#1B4F8A] mb-4">
             🤖 AI Analysis
           </h3>
 
-          {/* Ask AI */}
           {!aiData && !aiLoading && (
             <button
               onClick={handleAskAI}
-              className="bg-[#1B4F8A] text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="bg-[#1B4F8A] text-white px-5 py-2 rounded-lg"
             >
               Ask AI
             </button>
           )}
 
-          {/* Loading */}
-          {aiLoading && (
-            <div className="flex items-center gap-3 text-blue-600">
-              <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-              <span className="font-medium">Analyzing risk...</span>
-            </div>
-          )}
+          {aiLoading && <p className="text-blue-600">Analyzing...</p>}
 
-          {/* Error */}
-          {aiError && (
-            <div className="text-center">
-              <p className="text-red-500 mb-3">
-                ⚠️ Failed to get AI response
-              </p>
+          {aiError && <p className="text-red-500">Error loading AI</p>}
 
-              <button
-                onClick={handleAskAI}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* AI RESULT */}
           {aiData && (
-            <div className="bg-blue-50 p-5 rounded-xl border border-blue-200 mt-4">
-
-              <h4 className="font-semibold text-[#1B4F8A] mb-2">
-                AI Insights
-              </h4>
-
-              <p className="text-gray-700 leading-relaxed">
-                {aiData.description || "No response available"}
-              </p>
-
+            <div className="bg-blue-50 p-5 rounded-xl mt-4">
+              <p>{aiData.description}</p>
             </div>
           )}
         </div>

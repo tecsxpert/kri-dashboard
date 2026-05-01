@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import API from "../services/api";
+import { users } from "../data/mockData"; // ✅ dummy data
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,19 +18,21 @@ export default function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async (e) => {
+  // ✅ UPDATED LOGIN (NO BACKEND)
+  const handleLogin = (e) => {
     e.preventDefault();
     setError("");
 
-    try {
-      // 🔐 Replace with your backend API
-      const res = await API.post("/auth/login", form);
+    const user = users.find(
+      (u) =>
+        u.email === form.email &&
+        u.password === form.password
+    );
 
-      const token = res.data.token;
-      login(token);
-
+    if (user) {
+      login(user.token); // store dummy token
       navigate("/dashboard");
-    } catch (err) {
+    } else {
       setError("Invalid email or password");
     }
   };
@@ -41,39 +43,34 @@ export default function Login() {
         onSubmit={handleLogin}
         className="bg-white p-8 rounded-2xl shadow-lg w-80"
       >
-        {/* Title */}
         <h2 className="text-2xl font-bold text-[#1B4F8A] mb-6 text-center">
           LOGIN
         </h2>
 
-        {/* Email */}
         <input
           name="email"
           type="email"
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
-          className="w-full p-2 mb-3 border rounded focus:ring-2 focus:ring-blue-300 outline-none"
+          className="w-full p-2 mb-3 border rounded focus:ring-2 focus:ring-blue-300"
         />
 
-        {/* Password */}
         <input
           name="password"
           type="password"
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
-          className="w-full p-2 mb-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none"
+          className="w-full p-2 mb-2 border rounded focus:ring-2 focus:ring-blue-300"
         />
 
-        {/* Error */}
         {error && (
           <p className="text-red-500 text-sm mb-2 text-center">
             {error}
           </p>
         )}
 
-        {/* Forgot Password */}
         <p
           onClick={() => navigate("/forgot-password")}
           className="text-sm text-blue-600 cursor-pointer text-right mb-4 hover:underline"
@@ -81,17 +78,15 @@ export default function Login() {
           Forgot Password?
         </p>
 
-        {/* Login Button */}
-        <button className="w-full bg-[#1B4F8A] text-white p-2 rounded-lg hover:bg-blue-700 transition">
+        <button className="w-full bg-[#1B4F8A] text-white p-2 rounded-lg hover:bg-blue-700">
           Login
         </button>
 
-        {/* Register Link */}
         <p className="text-sm text-center mt-4">
           Don’t have an account?{" "}
           <span
             onClick={() => navigate("/register")}
-            className="text-blue-600 cursor-pointer hover:underline font-medium"
+            className="text-blue-600 cursor-pointer hover:underline"
           >
             Register
           </span>

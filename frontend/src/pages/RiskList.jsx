@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import API from "../services/api";
+import { risks as mockRisks } from "../data/mockData";
 
 export default function RiskList() {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export default function RiskList() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Load from URL
+  // Load filters from URL
   useEffect(() => {
     setSearch(params.get("q") || "");
     setStatus(params.get("status") || "");
@@ -52,34 +52,50 @@ export default function RiskList() {
     });
   }, [search, status, fromDate, toDate]);
 
-  // Fetch data
+  // Fetch (dummy)
   useEffect(() => {
     fetchRisks();
   }, [page, sortBy, sortDir, debouncedSearch, status, fromDate, toDate]);
 
-  const fetchRisks = async () => {
+  const fetchRisks = () => {
     setLoading(true);
-    try {
-      const res = await API.get("/all", {
-        params: {
-          page,
-          size: 5,
-          sortBy,
-          sortDir,
-          q: debouncedSearch,
-          status,
-          from: fromDate,
-          to: toDate,
-        },
-      });
 
-      setRisks(res.data.content);
-      setTotalPages(res.data.totalPages);
-    } catch (err) {
-      console.error("Error fetching risks:", err);
-    } finally {
-      setLoading(false);
+    let filtered = [...mockRisks];
+
+    // 🔍 Search
+    if (debouncedSearch) {
+      filtered = filtered.filter((r) =>
+        r.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+      );
     }
+
+    // 🎯 Status
+    if (status) {
+      filtered = filtered.filter((r) => r.status === status);
+    }
+
+    // 📅 Date filter
+    if (fromDate) {
+      filtered = filtered.filter((r) => r.date >= fromDate);
+    }
+    if (toDate) {
+      filtered = filtered.filter((r) => r.date <= toDate);
+    }
+
+    // 🔽 Sorting
+    filtered.sort((a, b) => {
+      if (sortDir === "asc") return a[sortBy] > b[sortBy] ? 1 : -1;
+      return a[sortBy] < b[sortBy] ? 1 : -1;
+    });
+
+    // 📄 Pagination
+    const pageSize = 5;
+    const start = page * pageSize;
+    const paginated = filtered.slice(start, start + pageSize);
+
+    setRisks(paginated);
+    setTotalPages(Math.ceil(filtered.length / pageSize));
+    setLoading(false);
   };
 
   // Sorting
@@ -92,22 +108,33 @@ export default function RiskList() {
     }
   };
 
-  // CSV Export
-  const handleExport = async () => {
-    try {
-      const res = await API.get("/export", {
-        responseType: "blob",
-      });
-
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "risks.csv");
-      document.body.appendChild(link);
-      link.click();
-    } catch (err) {
-      console.error("Export failed", err);
+  // ✅ UPDATED CSV EXPORT (FILTERED DATA)
+  const handleExport = () => {
+    if (risks.length === 0) {
+      alert("No data to export");
+      return;
     }
+
+    const csv = [
+      ["ID", "Name", "Status", "Score", "Date"],
+      ...risks.map((r) => [
+        r.id,
+        r.name,
+        r.status,
+        r.score,
+        r.date,
+      ])
+    ];
+
+    const blob = new Blob(
+      [csv.map((e) => e.join(",")).join("\n")],
+      { type: "text/csv;charset=utf-8;" }
+    );
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "filtered-risks.csv";
+    a.click();
   };
 
   return (
@@ -116,8 +143,8 @@ export default function RiskList() {
 
       <div className="p-6">
 
-        {/* 🔹 TITLE + ACTIONS */}
-        <div className="flex justify-between items-center mb-4">
+        {/* HEADER */}
+        <div className="flex justify-between mb-4">
           <h2 className="text-2xl font-bold text-[#1B4F8A]">
             Risk List
           </h2>
@@ -125,29 +152,27 @@ export default function RiskList() {
           <div className="flex gap-3">
             <button
               onClick={handleExport}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              className="bg-green-500 text-white px-4 py-2 rounded"
             >
               Export CSV
             </button>
 
             <button
               onClick={() => navigate("/create-risk")}
-              className="bg-[#1B4F8A] text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-[#1B4F8A] text-white px-4 py-2 rounded"
             >
               + Create Risk
             </button>
           </div>
         </div>
 
-        {/* 🔍 FILTER BAR */}
-        <div className="bg-white p-4 rounded-xl shadow mb-4 flex flex-wrap gap-4">
-
+        {/* FILTERS */}
+        <div className="bg-white p-4 rounded-xl shadow mb-4 flex gap-4 flex-wrap">
           <input
-            type="text"
             placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="p-2 border rounded w-48 focus:ring-2 focus:ring-blue-300"
+            className="p-2 border rounded"
           />
 
           <select
@@ -161,116 +186,51 @@ export default function RiskList() {
             <option>Low</option>
           </select>
 
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="p-2 border rounded"
-          />
-
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="p-2 border rounded"
-          />
+          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="p-2 border rounded" />
+          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="p-2 border rounded" />
         </div>
 
-        {/* 🔄 LOADING */}
-        {loading && (
-          <div className="space-y-2">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-6 bg-gray-300 animate-pulse rounded"
-              ></div>
-            ))}
-          </div>
-        )}
+        {/* LOADING */}
+        {loading && <p>Loading...</p>}
 
-        {/* 📭 EMPTY */}
-        {!loading && risks.length === 0 && (
-          <div className="bg-white p-4 rounded shadow text-center">
-            <p>No risks available</p>
-          </div>
-        )}
-
-        {/* 📊 TABLE */}
-        {!loading && risks.length > 0 && (
-          <table className="w-full bg-white rounded-xl shadow">
-            <thead className="bg-blue-200">
+        {/* TABLE */}
+        {!loading && (
+          <table className="w-full bg-white rounded shadow">
+            <thead>
               <tr>
-                <th onClick={() => handleSort("id")} className="cursor-pointer">ID 🔽</th>
-                <th onClick={() => handleSort("name")} className="cursor-pointer">Name 🔽</th>
+                <th onClick={() => handleSort("id")}>ID</th>
+                <th onClick={() => handleSort("name")}>Name</th>
                 <th>Status</th>
-                <th onClick={() => handleSort("score")} className="cursor-pointer">Score 🔽</th>
+                <th onClick={() => handleSort("score")}>Score</th>
                 <th>Date</th>
-                <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
               {risks.map((r) => (
-                <tr
-                  key={r.id}
-                  className="text-center border-t hover:bg-blue-50 cursor-pointer"
-                  onClick={() => navigate(`/risks/${r.id}`)}
-                >
-                  <td className="p-2">{r.id}</td>
+                <tr key={r.id} className="text-center border-t">
+                  <td>{r.id}</td>
                   <td>{r.name}</td>
-
-                  <td>
-                    <span
-                      className={`px-2 py-1 rounded text-white text-sm ${
-                        r.status === "High"
-                          ? "bg-red-500"
-                          : r.status === "Medium"
-                          ? "bg-yellow-500"
-                          : "bg-green-500"
-                      }`}
-                    >
-                      {r.status}
-                    </span>
-                  </td>
-
+                  <td>{r.status}</td>
                   <td>{r.score}</td>
                   <td>{r.date}</td>
-
-                  <td>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/edit-risk/${r.id}`);
-                      }}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
 
-        {/* 🔢 PAGINATION */}
-        <div className="flex justify-center items-center mt-4 gap-4">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage(page - 1)}
-            className="bg-blue-300 px-3 py-1 rounded disabled:opacity-50"
-          >
+        {/* PAGINATION */}
+        <div className="flex justify-center gap-4 mt-4">
+          <button disabled={page === 0} onClick={() => setPage(page - 1)}>
             Prev
           </button>
 
-          <span className="font-bold text-[#1B4F8A]">
-            Page {page + 1} of {totalPages}
-          </span>
+          <span>Page {page + 1}</span>
 
           <button
             disabled={page === totalPages - 1}
             onClick={() => setPage(page + 1)}
-            className="bg-blue-300 px-3 py-1 rounded disabled:opacity-50"
           >
             Next
           </button>
