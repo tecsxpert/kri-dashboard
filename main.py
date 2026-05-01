@@ -2,15 +2,15 @@ from fastapi import FastAPI
 import time
 import chromadb
 from collections import deque
-
 import redis
 import hashlib
 import json
+import random
 
 app = FastAPI()
 
 # ----------------------------
-# BASIC METRICS STORAGE
+# BASIC METRICS
 # ----------------------------
 start_time = time.time()
 response_times = deque(maxlen=10)
@@ -18,31 +18,20 @@ response_times = deque(maxlen=10)
 MODEL_NAME = "groq-llama-model"
 
 # ----------------------------
-# REDIS SETUP (FIXED)
+# REDIS SETUP
 # ----------------------------
-def connect_redis():
-    try:
-        # Try both localhost and WSL bridge
-        for host in ["127.0.0.1", "localhost"]:
-            try:
-                client = redis.Redis(
-                    host=host,
-                    port=6379,
-                    db=0,
-                    decode_responses=True
-                )
-                client.ping()
-                print(f"✅ Redis connected on {host}")
-                return client
-            except:
-                continue
-    except:
-        pass
-
+try:
+    redis_client = redis.Redis(
+        host="localhost",
+        port=6379,
+        db=0,
+        decode_responses=True
+    )
+    redis_client.ping()
+    print("✅ Redis connected")
+except:
+    redis_client = None
     print("❌ Redis not available")
-    return None
-
-redis_client = connect_redis()
 
 cache_hits = 0
 cache_misses = 0
@@ -54,10 +43,21 @@ chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_or_create_collection(name="default")
 
 # ----------------------------
-# HELPER
+# HELPERS
 # ----------------------------
 def get_cache_key(text: str):
     return hashlib.sha256(text.encode()).hexdigest()
+
+def generate_meta(start_time, cached: bool):
+    response_time_ms = int((time.time() - start_time) * 1000)
+
+    return {
+        "confidence": round(random.uniform(0.80, 0.98), 2),
+        "model_used": MODEL_NAME,
+        "tokens_used": random.randint(20, 120),
+        "response_time_ms": response_time_ms,
+        "cached": cached
+    }
 
 # ----------------------------
 # MIDDLEWARE
@@ -70,12 +70,13 @@ async def add_process_time_header(request, call_next):
     return response
 
 # ----------------------------
-# ASK ENDPOINT
+# ASK ENDPOINT (DAY 9 UPDATED)
 # ----------------------------
 @app.get("/ask")
 def ask(q: str, fresh: bool = False):
     global cache_hits, cache_misses
 
+    request_start = time.time()
     cache_key = get_cache_key(q)
 
     # CHECK CACHE
@@ -85,13 +86,14 @@ def ask(q: str, fresh: bool = False):
             cache_hits += 1
             return {
                 "source": "cache",
-                "answer": json.loads(cached)
+                "answer": json.loads(cached),
+                "meta": generate_meta(request_start, cached=True)
             }
 
-    # SIMULATED AI RESPONSE
+    # AI RESPONSE (SIMULATED)
     answer = f"AI response for: {q}"
 
-    # STORE CACHE (15 min)
+    # STORE CACHE
     if redis_client:
         redis_client.setex(cache_key, 900, json.dumps(answer))
 
@@ -99,11 +101,12 @@ def ask(q: str, fresh: bool = False):
 
     return {
         "source": "ai",
-        "answer": answer
+        "answer": answer,
+        "meta": generate_meta(request_start, cached=False)
     }
 
 # ----------------------------
-# HEALTH
+# HEALTH ENDPOINT
 # ----------------------------
 @app.get("/health")
 def health():
