@@ -60,3 +60,23 @@ logging:
 
 server:
   port: 8080
+
+# Day 7: Actuator — health & info endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: KRI Dashboard
+    description: Key Risk Indicator Management System
+    version: 1.0.0
+    developer: Varad (Java Developer 2)

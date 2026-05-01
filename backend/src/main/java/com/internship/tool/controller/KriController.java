@@ -1,7 +1,6 @@
 package com.internship.tool.controller;
 
-import com.internship.tool.dto.KriRequest;
-import com.internship.tool.dto.KriResponse;
+import com.internship.tool.dto.*;
 import com.internship.tool.service.KriService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST Controller for KRI (Key Risk Indicator) CRUD operations.
+ * REST Controller for KRI (Key Risk Indicator) CRUD, pagination, and export.
  * Base URL: /api/v1/kri
+ * Day 7: Added /search (paginated) and /export/csv endpoints.
  */
 @RestController
 @RequestMapping("/api/v1/kri")
@@ -24,6 +24,8 @@ import java.util.List;
 public class KriController {
 
     private final KriService kriService;
+
+    // ── CRUD ──────────────────────────────────────────────────────────────────
 
     @PostMapping
     @Operation(summary = "Create a new KRI")
@@ -70,5 +72,53 @@ public class KriController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         kriService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ── Day 7: Pagination & Search ────────────────────────────────────────────
+
+    @GetMapping("/search")
+    @Operation(summary = "Paginated search with optional name/status/score filters",
+               description = "Query params: name, status, minScore, maxScore, page (0-based), size, sortBy, sortDir")
+    public ResponseEntity<PagedKriResponse> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer minScore,
+            @RequestParam(required = false) Integer maxScore,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id")  String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        KriFilterRequest filter = KriFilterRequest.builder()
+                .name(name)
+                .status(status)
+                .minScore(minScore)
+                .maxScore(maxScore)
+                .page(page)
+                .size(size)
+                .sortBy(sortBy)
+                .sortDir(sortDir)
+                .build();
+
+        return ResponseEntity.ok(kriService.search(filter));
+    }
+
+    // ── Day 7: CSV Export ─────────────────────────────────────────────────────
+
+    @GetMapping("/export/csv")
+    @Operation(summary = "Export KRIs as CSV file",
+               description = "Optional query param: status (ACTIVE, INACTIVE, BREACH, NEAR_BREACH). Omit to export all.")
+    public ResponseEntity<byte[]> exportCsv(
+            @RequestParam(required = false) String status) {
+
+        byte[] csv = kriService.exportCsv(status);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.setContentDisposition(
+                ContentDisposition.attachment().filename("kri-export.csv").build());
+        headers.setContentLength(csv.length);
+
+        return new ResponseEntity<>(csv, headers, HttpStatus.OK);
     }
 }
