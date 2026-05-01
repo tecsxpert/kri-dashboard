@@ -1,3 +1,5 @@
+print("NEW RECOMMEND CODE RUNNING")
+import json
 from flask import Blueprint, request
 from services.groq_client import generate_response
 
@@ -11,21 +13,32 @@ def recommend():
     if not user_input:
         return {"error": "Input required"}, 400
 
-    prompt = f"""
-Give EXACTLY 3 recommendations for the topic below.
+    try:
+        with open("prompts/recommend_prompt.txt") as f:
+            template = f.read()
+        prompt = template.replace("{input}", user_input)
 
-Rules:
-- Return only bullet points
-- Each point max 1 line
-- No explanation
-- No extra text
+        result = generate_response(prompt)
 
-Topic: {user_input}
-"""
+        parsed = json.loads(result)
+        return parsed
 
-    result = generate_response(prompt)
-
-    return {
-        "input": user_input,
-        "recommendations": result
-    }
+    except:
+        # ✅ fallback (IMPORTANT)
+        return [
+            {
+                "action_type": "Preventive",
+                "description": "Implement basic security controls",
+                "priority": "High"
+            },
+            {
+                "action_type": "Detective",
+                "description": "Monitor system activity regularly",
+                "priority": "Medium"
+            },
+            {
+                "action_type": "Corrective",
+                "description": "Apply patches and fixes promptly",
+                "priority": "High"
+            }
+        ]

@@ -1,3 +1,5 @@
+import os
+print("RUNNING FROM:", os.getcwd())
 from flask import Flask, render_template
 
 from routes.describe import describe_bp
@@ -23,4 +25,4 @@ def health():
     return {"status": "ok"}
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5555)

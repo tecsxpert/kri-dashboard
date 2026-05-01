@@ -24,6 +24,10 @@ def generate_response(prompt):
     try:
         response = requests.post(url, headers=headers, json=data)
 
+        # ✅ Debug (proper indentation)
+        print(response.status_code)
+        print(response.text)
+
         if response.status_code == 200:
             return response.json()['choices'][0]['message']['content']
         else:
@@ -31,3 +35,4 @@ def generate_response(prompt):
 
     except Exception as e:
         return f"Error: {str(e)}"
+    print("API KEY:", API_KEY)
