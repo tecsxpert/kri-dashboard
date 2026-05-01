@@ -34,6 +34,22 @@ export default function Navbar() {
           Risks
         </Link>
 
+        {/* ✅ NEW ANALYTICS LINK */}
+        <Link to="/analytics" className="hover:text-blue-200 transition">
+          Analytics
+        </Link>
+
+
+        {/* 📊 REPORT PAGE */}
+        <Link to="/report" className="hover:text-blue-200">
+          Report
+        </Link>
+
+        {/* 📄 SAMPLE RISK DETAIL (for demo only) */}
+        <Link to="/risks/1" className="hover:text-blue-200">
+          Risk Detail
+        </Link>
+
         {/* Logout */}
         <button
           onClick={handleLogout}

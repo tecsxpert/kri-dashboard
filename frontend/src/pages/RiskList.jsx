@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { risks as mockRisks } from "../data/mockData";
+import Skeleton from "../components/Skeleton";
+import EmptyState from "../components/EmptyState";
+
+
 
 export default function RiskList() {
   const navigate = useNavigate();
@@ -191,7 +195,9 @@ export default function RiskList() {
         </div>
 
         {/* LOADING */}
-        {loading && <p>Loading...</p>}
+        {loading && <Skeleton rows={5} />}
+
+        {!loading && risks.length === 0 && (<EmptyState message="No risks available" />)}
 
         {/* TABLE */}
         {!loading && (

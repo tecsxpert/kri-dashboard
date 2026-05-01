@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { risks, aiResponse } from "../data/mockData";
-import { aiResponse } from "../data/mockData";
+
 
 export default function RiskDetail() {
   const { id } = useParams();

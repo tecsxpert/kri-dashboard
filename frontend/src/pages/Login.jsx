@@ -1,11 +1,9 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
-import { users } from "../data/mockData"; // ✅ dummy data
+import { users } from "../data/mockData";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
 
   const [form, setForm] = useState({
     email: "",
@@ -18,7 +16,6 @@ export default function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ UPDATED LOGIN (NO BACKEND)
   const handleLogin = (e) => {
     e.preventDefault();
     setError("");
@@ -30,7 +27,9 @@ export default function Login() {
     );
 
     if (user) {
-      login(user.token); // store dummy token
+      // ✅ store token manually (no context needed)
+      localStorage.setItem("token", user.token);
+
       navigate("/dashboard");
     } else {
       setError("Invalid email or password");

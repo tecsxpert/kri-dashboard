@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import RiskList from "./pages/RiskList";
 import RiskForm from "./pages/RiskForm";
 import RiskDetail from "./pages/RiskDetail";
+import Report from "./pages/Report";
+import Analytics from "./pages/Analytics";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 

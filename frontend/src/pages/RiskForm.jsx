@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import API from "../services/api";
+import { risks as mockRisks } from "../data/mockData";
 
 export default function RiskForm() {
   const navigate = useNavigate();
@@ -17,21 +17,15 @@ export default function RiskForm() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // 🔄 Load data if editing
+  // 🔄 Load existing risk (EDIT MODE)
   useEffect(() => {
-    if (id) fetchRisk();
+    if (id) {
+      const found = mockRisks.find((r) => r.id === Number(id));
+      if (found) setForm(found);
+    }
   }, [id]);
 
-  const fetchRisk = async () => {
-    try {
-      const res = await API.get(`/risks/${id}`);
-      setForm(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // 🔁 Controlled input handler
+  // 🔁 Input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -54,29 +48,34 @@ export default function RiskForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // 🚀 Submit
-  const handleSubmit = async (e) => {
+  // 🚀 Submit (DUMMY)
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
     setLoading(true);
 
-    try {
+    setTimeout(() => {
       if (id) {
-        await API.put(`/risks/${id}`, form);
+        // ✏️ UPDATE
+        const index = mockRisks.findIndex((r) => r.id === Number(id));
+        if (index !== -1) {
+          mockRisks[index] = { ...mockRisks[index], ...form };
+        }
       } else {
-        await API.post("/risks", form);
+        // ➕ CREATE
+        const newRisk = {
+          id: mockRisks.length + 1,
+          ...form
+        };
+        mockRisks.push(newRisk);
       }
 
       alert("Saved successfully 💙");
       navigate("/risks");
-    } catch (err) {
-      console.error(err);
-      alert("Error saving data");
-    } finally {
       setLoading(false);
-    }
+    }, 800);
   };
 
   return (
@@ -101,9 +100,7 @@ export default function RiskForm() {
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300"
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name}</p>
-            )}
+            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
 
           {/* Status */}
@@ -119,9 +116,7 @@ export default function RiskForm() {
               <option>Medium</option>
               <option>High</option>
             </select>
-            {errors.status && (
-              <p className="text-red-500 text-sm">{errors.status}</p>
-            )}
+            {errors.status && <p className="text-red-500 text-sm">{errors.status}</p>}
           </div>
 
           {/* Score */}
@@ -134,9 +129,7 @@ export default function RiskForm() {
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300"
             />
-            {errors.score && (
-              <p className="text-red-500 text-sm">{errors.score}</p>
-            )}
+            {errors.score && <p className="text-red-500 text-sm">{errors.score}</p>}
           </div>
 
           {/* Date */}
@@ -148,15 +141,13 @@ export default function RiskForm() {
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300"
             />
-            {errors.date && (
-              <p className="text-red-500 text-sm">{errors.date}</p>
-            )}
+            {errors.date && <p className="text-red-500 text-sm">{errors.date}</p>}
           </div>
 
           {/* Submit */}
           <button
             disabled={loading}
-            className="w-full bg-[#1B4F8A] text-white p-2 mt-4 rounded hover:bg-blue-700 transition"
+            className="w-full bg-[#1B4F8A] text-white p-2 mt-4 rounded hover:bg-blue-700"
           >
             {loading ? "Saving..." : "Submit"}
           </button>

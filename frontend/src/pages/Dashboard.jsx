@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { stats as mockStats } from "../data/mockData";
+import Skeleton from "../components/Skeleton";
+import EmptyState from "../components/EmptyState";
 
 import {
   BarChart,
@@ -20,24 +22,14 @@ export default function Dashboard() {
     fetchStats();
   }, []);
 
-  // ✅ NO API → USE MOCK DATA
   const fetchStats = () => {
+    setLoading(true);
+
     setTimeout(() => {
       setStats(mockStats);
       setLoading(false);
-    }, 800); // small delay for realistic feel
+    }, 800);
   };
-
-  if (loading) {
-    return (
-      <div className="bg-[#E3F2FD] min-h-screen">
-        <Navbar />
-        <p className="p-6 text-[#1B4F8A] font-medium">
-          Loading dashboard...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-[#E3F2FD] min-h-screen">
@@ -48,53 +40,66 @@ export default function Dashboard() {
           Dashboard
         </h2>
 
-        {/* 🔹 KPI CARDS */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-gray-500">Total Risks</p>
-            <h3 className="text-xl font-bold text-blue-600">
-              {stats.total}
-            </h3>
-          </div>
+        {/* 🔄 LOADING STATE */}
+        {loading && <Skeleton rows={4} />}
 
-          <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-gray-500">High Risk</p>
-            <h3 className="text-xl font-bold text-red-500">
-              {stats.high}
-            </h3>
-          </div>
+        {/* 📭 EMPTY STATE */}
+        {!loading && !stats && (
+          <EmptyState message="No dashboard data available" />
+        )}
 
-          <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-gray-500">Medium Risk</p>
-            <h3 className="text-xl font-bold text-yellow-500">
-              {stats.medium}
-            </h3>
-          </div>
+        {/* ✅ MAIN CONTENT */}
+        {!loading && stats && (
+          <>
+            {/* KPI CARDS */}
+            <div className="grid grid-cols-4 gap-4 mb-8">
+              <div className="bg-white p-4 rounded-xl shadow">
+                <p className="text-gray-500">Total Risks</p>
+                <h3 className="text-xl font-bold text-blue-600">
+                  {stats.total}
+                </h3>
+              </div>
 
-          <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-gray-500">Low Risk</p>
-            <h3 className="text-xl font-bold text-green-500">
-              {stats.low}
-            </h3>
-          </div>
-        </div>
+              <div className="bg-white p-4 rounded-xl shadow">
+                <p className="text-gray-500">High Risk</p>
+                <h3 className="text-xl font-bold text-red-500">
+                  {stats.high}
+                </h3>
+              </div>
 
-        {/* 📊 BAR CHART */}
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h3 className="text-lg font-bold text-[#1B4F8A] mb-4">
-            Risks by Status
-          </h3>
+              <div className="bg-white p-4 rounded-xl shadow">
+                <p className="text-gray-500">Medium Risk</p>
+                <h3 className="text-xl font-bold text-yellow-500">
+                  {stats.medium}
+                </h3>
+              </div>
 
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stats.byStatus}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#1B4F8A" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+              <div className="bg-white p-4 rounded-xl shadow">
+                <p className="text-gray-500">Low Risk</p>
+                <h3 className="text-xl font-bold text-green-500">
+                  {stats.low}
+                </h3>
+              </div>
+            </div>
+
+            {/* BAR CHART */}
+            <div className="bg-white p-6 rounded-xl shadow">
+              <h3 className="text-lg font-bold text-[#1B4F8A] mb-4">
+                Risks by Status
+              </h3>
+
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.byStatus}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#1B4F8A" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
