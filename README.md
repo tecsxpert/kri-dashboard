@@ -1,6 +1,6 @@
 # KRI Dashboard — Backend API
 
-> **Tool-08 | Java Developer 2 | Spring Boot 3.2 | PostgreSQL | Redis | JWT**
+> **Tool-08 | Java | Spring Boot 3.2 | PostgreSQL | Redis | JWT**
 
 A comprehensive **Key Risk Indicator (KRI) Dashboard** REST API built with Spring Boot, featuring JWT authentication, Redis caching, email notifications, AOP audit logging, and Flyway database migrations.
 
@@ -10,8 +10,7 @@ A comprehensive **Key Risk Indicator (KRI) Dashboard** REST API built with Sprin
 
 | Property       | Value                          |
 |----------------|--------------------------------|
-| Developer      | Varad (Java Developer 2)       |
-| Branch         | `varad-java-dev2`              |
+|              |
 | Framework      | Spring Boot 3.2.5              |
 | Java Version   | Java 17                        |
 | Database       | PostgreSQL                     |
