@@ -46,7 +46,7 @@ export default function ForgotPassword() {
         className="bg-white p-8 rounded-2xl shadow-lg w-80"
       >
         <h2 className="text-2xl font-bold text-[#1B4F8A] mb-6 text-center">
-          Forgot Password
+          FORGOT PASSWORD
         </h2>
 
         <input
