@@ -10,26 +10,20 @@ def describe():
     data = request.json
     user_input = data.get("text", "")
 
+    # 1. Validate input
     if not user_input:
         return {"error": "Input required"}, 400
 
-    prompt = f"""
-You are a professional risk analyst.
+    # 2. Load prompt template
+    with open("prompts/describe_prompt.txt") as f:
+        template = f.read()
 
-Analyze the given risk and generate structured output.
-Risk: {user_input}
+    prompt = template.replace("{input}", user_input)
 
-Return ONLY JSON:
-{{
-  "title": "Short professional title",
-  "description": "Clear and concise explanation",
-  "risk_level": "Low/Medium/High"
-}}
-
-Do not add any extra text outside JSON.
-"""
+    # 3. Call AI
     result = generate_response(prompt)
 
+    # 4. Parse JSON
     try:
         parsed = json.loads(result)
     except:
@@ -39,5 +33,7 @@ Do not add any extra text outside JSON.
             "risk_level": "Unknown"
         }
 
+    # 5. Add timestamp
     parsed["generated_at"] = datetime.now().isoformat()
+
     return parsed

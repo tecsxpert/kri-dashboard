@@ -1,22 +1,33 @@
 import os
-from groq import Groq
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+API_KEY = os.getenv("GROQ_API_KEY")
 
 def generate_response(prompt):
+    url = "https://api.groq.com/openai/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "llama3-8b-8192",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+
     try:
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5
-        )
-        return response.choices[0].message.content
+        response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code == 200:
+            return response.json()['choices'][0]['message']['content']
+        else:
+            return "Error from AI service"
 
     except Exception as e:
-        return f"ERROR: {str(e)}"
-    print("API KEY:", os.getenv("GROQ_API_KEY"))
+        return f"Error: {str(e)}"
