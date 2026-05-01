@@ -8,28 +8,53 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.Map;
 
-/**
- * Redis cache configuration.
- * Cache TTL: 10 minutes. Values serialized as JSON for readability.
- */
 @Configuration
-@EnableCaching
 public class RedisConfig {
 
+    // ------------------------------------------------------------------ //
+    //  Shared TTL                                                          //
+    // ------------------------------------------------------------------ //
+
+    private static final Duration TTL = Duration.ofMinutes(10);
+
+    // ------------------------------------------------------------------ //
+    //  Default cache configuration                                         //
+    // ------------------------------------------------------------------ //
+
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(10))
+    public RedisCacheConfiguration defaultCacheConfig() {
+        return RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(TTL)
                 .disableCachingNullValues()
+                .serializeKeysWith(
+                        RedisSerializationContext.SerializationPair
+                                .fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(
-                                new GenericJackson2JsonRedisSerializer()));
+                        RedisSerializationContext.SerializationPair
+                                .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Cache manager with per-cache TTL configuration                      //
+    // ------------------------------------------------------------------ //
+
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory factory,
+                                          RedisCacheConfiguration defaultCacheConfig) {
+
+        Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
+                "kriRecords",    defaultCacheConfig,   // GET /all  (page-scoped key)
+                "kriRecordById", defaultCacheConfig    // GET /{id}
+        );
 
         return RedisCacheManager.builder(factory)
-                .cacheDefaults(config)
+                .cacheDefaults(defaultCacheConfig)
+                .withInitialCacheConfigurations(cacheConfigs)
                 .build();
     }
 }
