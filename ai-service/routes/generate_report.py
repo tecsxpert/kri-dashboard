@@ -22,7 +22,6 @@ def generate_report():
         "status": "processing"
     })
 
-
 @report_bp.route("/report-result/<task_id>", methods=["GET"])
 def get_result(task_id):
     result = ai_results.get(task_id)
@@ -34,6 +33,7 @@ def get_result(task_id):
         "status": "completed",
         "result": result
     })
+
 
 
 @report_bp.route("/generate-report-stream", methods=["GET"])
