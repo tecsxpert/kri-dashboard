@@ -6,9 +6,8 @@ import redis
 import hashlib
 import json
 import random
+from threading import Thread
 import uuid
-import threading
-import requests
 
 app = FastAPI()
 
@@ -46,9 +45,10 @@ chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_or_create_collection(name="default")
 
 # ----------------------------
-# JOB STORE (DAY 11)
+# JOB QUEUE
 # ----------------------------
-jobs = {}
+job_store = {}
+QUEUE_NAME = "report_queue"
 
 # ----------------------------
 # HELPERS
@@ -57,15 +57,33 @@ def get_cache_key(text: str):
     return hashlib.sha256(text.encode()).hexdigest()
 
 def generate_meta(start_time, cached: bool):
-    response_time_ms = int((time.time() - start_time) * 1000)
-
     return {
         "confidence": round(random.uniform(0.80, 0.98), 2),
         "model_used": MODEL_NAME,
         "tokens_used": random.randint(20, 120),
-        "response_time_ms": response_time_ms,
+        "response_time_ms": int((time.time() - start_time) * 1000),
         "cached": cached
     }
+
+# ----------------------------
+# WORKER
+# ----------------------------
+def worker():
+    while True:
+        if redis_client:
+            job_data = redis_client.lpop(QUEUE_NAME)
+            if job_data:
+                job = json.loads(job_data)
+                job_id = job["job_id"]
+                text = job["text"]
+
+                job_store[job_id]["status"] = "processing"
+                time.sleep(3)
+
+                job_store[job_id]["status"] = "completed"
+                job_store[job_id]["report"] = f"Generated report for {text}"
+
+Thread(target=worker, daemon=True).start()
 
 # ----------------------------
 # MIDDLEWARE
@@ -78,7 +96,7 @@ async def add_process_time_header(request, call_next):
     return response
 
 # ----------------------------
-# ASK ENDPOINT
+# ASK (WITH FALLBACK)
 # ----------------------------
 @app.get("/ask")
 def ask(q: str, fresh: bool = False):
@@ -87,7 +105,7 @@ def ask(q: str, fresh: bool = False):
     request_start = time.time()
     cache_key = get_cache_key(q)
 
-    # CACHE CHECK
+    # CACHE
     if not fresh and redis_client:
         cached = redis_client.get(cache_key)
         if cached:
@@ -95,125 +113,86 @@ def ask(q: str, fresh: bool = False):
             return {
                 "source": "cache",
                 "answer": json.loads(cached),
-                "meta": generate_meta(request_start, cached=True)
+                "meta": {**generate_meta(request_start, True), "is_fallback": False}
             }
 
-    # AI RESPONSE (IMPROVED)
-    answer = f"""
-Detailed Explanation:
+    try:
+        # 🔥 CHANGE THIS TO TRUE TO TEST FALLBACK
+        FORCE_ERROR = False
 
-{q} is an important concept in computer science and AI systems.
+        if FORCE_ERROR:
+            raise Exception("AI timeout")
 
-Key Points:
-- Widely used in real applications
-- Helps in understanding system design
-- Useful for interviews and projects
+        answer = f"""
+Here is a detailed explanation:
+
+{q} is an important concept in computer science.
+
+Simple explanation:
+- It is widely used
+- Helps understanding core ideas
 
 Example:
-You can practice {q} by building small APIs or mini projects.
+Practice {q} using small projects.
 
 Summary:
-Understanding {q} improves your technical knowledge step by step.
+Learning {q} improves your knowledge step by step.
 """
 
-    # STORE CACHE
-    if redis_client:
-        redis_client.setex(cache_key, 900, json.dumps(answer))
+        if redis_client:
+            redis_client.setex(cache_key, 900, json.dumps(answer))
 
-    cache_misses += 1
+        cache_misses += 1
 
-    return {
-        "source": "ai",
-        "answer": answer,
-        "meta": generate_meta(request_start, cached=False)
-    }
+        return {
+            "source": "ai",
+            "answer": answer,
+            "meta": {**generate_meta(request_start, False), "is_fallback": False}
+        }
+
+    except Exception as e:
+        return {
+            "source": "fallback",
+            "answer": f"Quick answer: {q} is a core concept. Try again later.",
+            "meta": {
+                **generate_meta(request_start, False),
+                "is_fallback": True,
+                "error": str(e)
+            }
+        }
 
 # ----------------------------
-# HEALTH ENDPOINT
+# GENERATE REPORT
+# ----------------------------
+@app.post("/generate-report")
+def generate_report(data: dict):
+    job_id = str(uuid.uuid4())
+    job_store[job_id] = {"status": "queued"}
+
+    if redis_client:
+        redis_client.rpush(QUEUE_NAME, json.dumps({
+            "job_id": job_id,
+            "text": data["text"]
+        }))
+
+    return {"job_id": job_id, "status": "queued"}
+
+# ----------------------------
+# REPORT STATUS
+# ----------------------------
+@app.get("/report-status/{job_id}")
+def report_status(job_id: str):
+    return job_store.get(job_id, {"status": "not_found"})
+
+# ----------------------------
+# HEALTH
 # ----------------------------
 @app.get("/health")
 def health():
-    avg_response_time = (
-        sum(response_times) / len(response_times)
-        if response_times else 0
-    )
-
-    try:
-        doc_count = collection.count()
-    except:
-        doc_count = 0
-
-    uptime_seconds = time.time() - start_time
-
-    cache_stats = {
-        "size": redis_client.dbsize() if redis_client else 0,
-        "hits": cache_hits,
-        "misses": cache_misses
-    }
-
     return {
         "model_name": MODEL_NAME,
-        "avg_response_time_last_10": round(avg_response_time, 4),
-        "chroma_doc_count": doc_count,
-        "uptime_seconds": round(uptime_seconds, 2),
-        "cache_stats": cache_stats
+        "avg_response_time": round(sum(response_times)/len(response_times), 4) if response_times else 0,
+        "uptime": round(time.time() - start_time, 2),
+        "cache_hits": cache_hits,
+        "cache_misses": cache_misses
     }
-
-# ----------------------------
-# DAY 11: BACKGROUND JOB WORKER
-# ----------------------------
-def process_report(job_id: str, data: dict):
-    time.sleep(5)  # simulate heavy processing
-
-    result = {
-        "status": "completed",
-        "report": f"Generated report for {data['text']}"
-    }
-
-    jobs[job_id] = result
-
-    # webhook call
-    try:
-        requests.post("http://127.0.0.1:8001/webhook", json={
-            "job_id": job_id,
-            "result": result
-        })
-    except:
-        print("Webhook failed")
-
-# ----------------------------
-# DAY 11: GENERATE REPORT API
-# ----------------------------
-@app.post("/generate-report")
-def generate_report(payload: dict):
-    job_id = str(uuid.uuid4())
-
-    jobs[job_id] = {
-        "status": "processing"
-    }
-
-    thread = threading.Thread(
-        target=process_report,
-        args=(job_id, payload)
-    )
-    thread.start()
-
-    return {
-        "job_id": job_id,
-        "status": "started"
-    }
-
-# ----------------------------
-# JOB STATUS API
-# ----------------------------
-@app.get("/report-status/{job_id}")
-def get_status(job_id: str):
-    return jobs.get(job_id, {"error": "job not found"})
-
-# ----------------------------
-# WEBHOOK ENDPOINT
-# ----------------------------
-@app.post("/webhook")
-def webhook(data: dict):
-    print("Webhook received:", data)
-    return {"ok": True}
