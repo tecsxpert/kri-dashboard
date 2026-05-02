@@ -1,7 +1,6 @@
 import threading
 from services.groq_client import generate_response
 
-
 ai_results = {}
 
 def run_ai_task(task_id, text):
