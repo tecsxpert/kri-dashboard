@@ -41,6 +41,10 @@ A comprehensive **Key Risk Indicator (KRI) Dashboard** REST API built with Sprin
 | Day 13 | Rate Limiting (Bucket4j), ApiResponse<T> wrapper | ✅ Done |
 | Day 14 | Soft Delete, Production profile, Custom Health Indicator (V6 migration) | ✅ Done |
 | Day 15 | DashboardService unit tests, Request logging filter, Final cleanup | ✅ Done |
+| Day 16 | In-app Notifications System (V7 migration, Notification entity, Auto-alerts) | ✅ Done |
+| Day 17 | Excel Export using Apache POI | ✅ Done |
+| Day 18 | Bulk Operations (Bulk Create & Bulk Status Update) | ✅ Done |
+| Day 19 | Security hardening (CORS config, Security headers, Method security) | ✅ Done |
 
 ---
 
@@ -112,6 +116,20 @@ backend/
 | PUT    | `/api/v1/kri/{id}`           | Update KRI                   | ✅ Yes (ADMIN)|
 | DELETE | `/api/v1/kri/{id}`           | Delete KRI                   | ✅ Yes (ADMIN)|
 | GET    | `/api/v1/kri/export/csv`     | Export KRIs to CSV           | ✅ Yes        |
+| GET    | `/api/v1/kri/export/excel`   | Export KRIs to Excel         | ✅ Yes        |
+| POST   | `/api/v1/kri/bulk`           | Bulk create KRIs             | ✅ Yes (ADMIN)|
+| PATCH  | `/api/v1/kri/bulk/status`    | Bulk update KRI statuses     | ✅ Yes (ADMIN)|
+| PATCH  | `/api/v1/kri/{id}/archive`   | Soft-delete a KRI            | ✅ Yes (ADMIN)|
+| GET    | `/api/v1/kri/{id}/history`   | Get audit history of a KRI   | ✅ Yes        |
+
+### 🔔 In-App Notifications
+| Method | Endpoint                            | Description                  | Auth Required |
+|--------|-------------------------------------|------------------------------|---------------|
+| GET    | `/api/v1/notifications`             | Get all notifications        | ✅ Yes        |
+| GET    | `/api/v1/notifications/unread`      | Get unread notifications     | ✅ Yes        |
+| GET    | `/api/v1/notifications/unread/count`| Get unread count             | ✅ Yes        |
+| PATCH  | `/api/v1/notifications/{id}/read`   | Mark notification as read    | ✅ Yes        |
+| PATCH  | `/api/v1/notifications/read-all`    | Mark all as read             | ✅ Yes        |
 
 ### 📈 Analytics & Dashboard
 | Method | Endpoint                     | Description                  | Auth Required |
