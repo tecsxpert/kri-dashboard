@@ -37,6 +37,10 @@ A comprehensive **Key Risk Indicator (KRI) Dashboard** REST API built with Sprin
 | Day 9 | Role-Based Access Control (RBAC), Admin Controller | ✅ Done |
 | Day 10 | Dashboard Analytics API, KRI statistics summary | ✅ Done |
 | Day 11 | GitHub Actions CI/CD Pipeline, CONTRIBUTING.md | ✅ Done |
+| Day 12 | KRI Audit History (kri_history table, V5 migration, history API) | ✅ Done |
+| Day 13 | Rate Limiting (Bucket4j), ApiResponse<T> wrapper | ✅ Done |
+| Day 14 | Soft Delete, Production profile, Custom Health Indicator (V6 migration) | ✅ Done |
+| Day 15 | DashboardService unit tests, Request logging filter, Final cleanup | ✅ Done |
 
 ---
 
