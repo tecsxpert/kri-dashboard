@@ -1,243 +1,83 @@
-# AI Service (KRI Dashboard Backend)
+# KRI Dashboard (AI-Based Risk Analysis System)
 
-## Overview
+##  Project Overview
+This project is an AI-powered Key Risk Indicator (KRI) Dashboard designed to analyze risks and provide intelligent insights.  
+It uses AI to classify risks, assign scores, categorize them, and generate recommendations.
 
-This is the AI backend service for the KRI Dashboard.
-It provides APIs for risk analysis, recommendations, categorization, and report generation using AI.
 
----
 
-## Prerequisites
+##  Technologies Used
+- Python (Flask)
+- Groq API (LLM)
+- HTML, JavaScript
+- Chart.js (for visualization)
 
-* Python 3.8+
-* pip (Python package manager)
 
----
 
-## Installation
+##  Features
+- AI-based risk classification (Low, Medium, High)
+- Risk scoring system
+- Risk categorization (Cybersecurity, Financial, Operational)
+- AI-generated recommendations
+- Interactive dashboard UI
+- End-to-end integration (Frontend + Backend)
 
-1. Clone the repository:
 
-```bash
-git clone <your-repo-url>
-cd ai-service
-```
 
-2. Install dependencies:
+##  My Implementation (Day 1–10)
 
-```bash
-pip install -r requirements.txt
-```
+- Developed Flask-based backend APIs
+- Integrated Groq API for AI responses
+- Built multiple endpoints:
+  - `/describe`
+  - `/recommend`
+  - `/categorize`
+  - `/analyze`
+  - `/dashboard`
+- Implemented risk scoring logic
+- Enhanced system with category and recommendation features
+- Designed frontend dashboard using HTML & JavaScript
+- Integrated frontend with backend APIs
+- Performed testing using curl and browser
+- Completed full system integration
 
----
 
-## Environment Variables
+## How to Run
 
-Create a `.env` file in the root:
+1. Navigate to project folder:
 
-```env
-GROQ_API_KEY=your_api_key_here
-```
+   cd ai-service
 
----
+2. Run the server:
 
-## Run the Service
+   python app.py
 
-```bash
-python app.py
-```
 
-Open in browser:
+3. Open browser:
 
-```
-http://127.0.0.1:5000/
-```
+   http://127.0.0.1:5000/
 
----
 
-## 🔌 API Endpoints
+##  Sample Input
 
-### 1. Health Check
+Cybersecurity risk, Financial fraud, Server downtime
 
-**GET /health**
 
-Response:
+##  Output
 
-```json
-{ "status": "ok" }
-```
+The system provides:
 
----
+* Risk Level (Low, Medium, High)
+* Risk Score
+* Category
+* Recommendation
 
-### 2. Describe Risk
 
-**POST /describe**
+##  Final Outcome
 
-Request:
+This project is a complete AI-powered KRI Dashboard that analyzes risks and provides intelligent insights through a web interface.
 
-```json
-{ "text": "Cybersecurity risk" }
-```
 
-Response:
-
-```json
-{
-  "title": "...",
-  "description": "...",
-  "risk_level": "High",
-  "generated_at": "timestamp"
-}
-```
-
----
-
-### 3. Recommend Actions
-
-**POST /recommend**
-
-Request:
-
-```json
-{ "text": "Improve cybersecurity" }
-```
-
-Response:
-
-```json
-{
-  "recommendations": [
-    {
-      "action_type": "Prevention",
-      "description": "...",
-      "priority": "High"
-    }
-  ]
-}
-```
-
----
-
-### 4. Categorize Risk
-
-**POST /categorize**
-
-Request:
-
-```json
-{ "text": "Phishing attack" }
-```
-
-Response:
-
-```json
-{ "category": "Cybersecurity" }
-```
-
----
-
-### 5. Dashboard Analysis
-
-**POST /dashboard**
-
-Request:
-
-```json
-{ "risks": ["Cyber risk", "Fraud"] }
-```
-
-Response:
-
-```json
-{
-  "results": [...]
-}
-```
-
----
-
-### 6. Generate Report
-
-**POST /generate-report**
-
-Request:
-
-```json
-{ "risks": ["Cyber risk"] }
-```
-
-Response:
-
-```json
-{
-  "title": "...",
-  "executive_summary": "...",
-  "overview": "...",
-  "top_items": [],
-  "recommendations": []
-}
-```
-
----
-
-### 7. Analyse Document
-
-**POST /analyse-document**
-
-Request:
-
-```json
-{ "text": "System has vulnerabilities" }
-```
-
-Response:
-
-```json
-{
-  "findings": [
-    {
-      "type": "Risk",
-      "description": "...",
-      "severity": "High"
-    }
-  ]
-}
-```
-
----
-
-### 8. Batch Process
-
-**POST /batch-process**
-
-Request:
-
-```json
-{
-  "items": ["Risk1", "Risk2"]
-}
-```
-
-Response:
-
-```json
-{
-  "results": [
-    { "input": "Risk1", "result": "..." }
-  ]
-}
-```
-
----
-
-## Notes
-
-* All AI responses are generated using Groq API
-* Ensure API key is valid
-* Use JSON format for all requests
-
----
-
-## Author
+##  Developed By
 
 Chaithanya V

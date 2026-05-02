@@ -9,6 +9,7 @@ from routes.analyze import analyze_bp
 from routes.dashboard import dashboard_bp
 from routes.rag import rag_bp
 from routes.report import report_bp
+from routes.generate_report import report_bp
 
 app = Flask(__name__)
 

@@ -54,4 +54,4 @@ Low, Medium, or High
         "results": results,
         "average_score": avg_score,
         "overall_risk": overall
-    }
+    } 
