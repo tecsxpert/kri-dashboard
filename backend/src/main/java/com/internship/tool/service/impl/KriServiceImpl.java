@@ -7,6 +7,7 @@ import com.internship.tool.exception.ResourceNotFoundException;
 import com.internship.tool.repository.KriHistoryRepository;
 import com.internship.tool.repository.KriRepository;
 import com.internship.tool.service.KriService;
+import com.internship.tool.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.*;
@@ -18,6 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  * Implementation of KriService providing CRUD + pagination + CSV export + audit history.
@@ -32,6 +39,7 @@ public class KriServiceImpl implements KriService {
 
     private final KriRepository        kriRepository;
     private final KriHistoryRepository historyRepository;
+    private final NotificationService  notificationService;
 
     // ── CRUD ──────────────────────────────────────────────────────────────────
 
@@ -49,6 +57,11 @@ public class KriServiceImpl implements KriService {
 
         // Day 12 — record history
         recordHistory(saved.getId(), "CREATE", null, saved);
+
+        // Day 16 — fire breach notification if status warrants it
+        if (Set.of("BREACH", "NEAR_BREACH").contains(saved.getStatus())) {
+            notificationService.createBreachAlert(saved);
+        }
 
         log.info("KRI created: id={}", saved.getId());
         return toResponse(saved);
@@ -100,6 +113,11 @@ public class KriServiceImpl implements KriService {
 
         // Day 12 — record history
         recordHistory(saved.getId(), "UPDATE", snapshot, saved);
+
+        // Day 16 — fire breach notification if status just became BREACH/NEAR_BREACH
+        if (Set.of("BREACH", "NEAR_BREACH").contains(saved.getStatus())) {
+            notificationService.createBreachAlert(saved);
+        }
 
         return toResponse(saved);
     }
@@ -159,6 +177,51 @@ public class KriServiceImpl implements KriService {
         return baos.toByteArray();
     }
 
+    // ── Day 17: Excel Export ──────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportExcel(String status) {
+        log.info("Exporting KRIs as Excel, status={}", status);
+        var kris = kriRepository.findAllForExport(status);
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("KRIs");
+            
+            // Header Row
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("ID");
+            headerRow.createCell(1).setCellValue("Name");
+            headerRow.createCell(2).setCellValue("Description");
+            headerRow.createCell(3).setCellValue("Status");
+            headerRow.createCell(4).setCellValue("Score");
+            headerRow.createCell(5).setCellValue("Created At");
+            headerRow.createCell(6).setCellValue("Updated At");
+
+            // Data Rows
+            int rowIdx = 1;
+            for (Kri k : kris) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(k.getId());
+                row.createCell(1).setCellValue(k.getName());
+                row.createCell(2).setCellValue(k.getDescription() == null ? "" : k.getDescription());
+                row.createCell(3).setCellValue(k.getStatus());
+                if (k.getScore() != null) {
+                    row.createCell(4).setCellValue(k.getScore());
+                } else {
+                    row.createCell(4).setCellValue(0);
+                }
+                row.createCell(5).setCellValue(k.getCreatedAt() != null ? k.getCreatedAt().toString() : "");
+                row.createCell(6).setCellValue(k.getUpdatedAt() != null ? k.getUpdatedAt().toString() : "");
+            }
+
+            workbook.write(baos);
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("Failed to export Excel", e);
+            throw new RuntimeException("Failed to export Excel data", e);
+        }
+    }
+
     // ── Day 12: History ───────────────────────────────────────────────────────
 
     @Override
@@ -167,6 +230,34 @@ public class KriServiceImpl implements KriService {
         log.debug("Fetching history for KRI id={}", kriId);
         return historyRepository.findByKriIdOrderByChangedAtDesc(kriId)
                 .stream().map(this::toHistoryResponse).toList();
+    }
+
+    // ── Day 18: Bulk Operations ───────────────────────────────────────────────
+
+    @Override
+    @Transactional
+    public List<KriResponse> bulkCreate(List<KriRequest> requests) {
+        log.info("Bulk creating {} KRIs", requests.size());
+        return requests.stream().map(this::create).toList();
+    }
+
+    @Override
+    @Transactional
+    public void bulkUpdateStatus(List<Long> ids, String newStatus) {
+        log.info("Bulk updating status to {} for KRIs: {}", newStatus, ids);
+        List<Kri> kris = kriRepository.findAllById(ids);
+        for (Kri kri : kris) {
+            Kri snapshot = Kri.builder()
+                    .name(kri.getName()).status(kri.getStatus()).score(kri.getScore()).build();
+            kri.setStatus(newStatus);
+            Kri saved = kriRepository.save(kri);
+            
+            recordHistory(saved.getId(), "UPDATE_STATUS", snapshot, saved);
+            
+            if (Set.of("BREACH", "NEAR_BREACH").contains(saved.getStatus())) {
+                notificationService.createBreachAlert(saved);
+            }
+        }
     }
 
     // ── Day 14: Soft Delete / Archive ─────────────────────────────────────────
