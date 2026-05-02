@@ -132,4 +132,26 @@ public class KriController {
 
         return new ResponseEntity<>(csv, headers, HttpStatus.OK);
     }
+
+    // ── Day 12: Audit History ─────────────────────────────────────────────────
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Get the full audit history for a specific KRI",
+               description = "Returns all CREATE/UPDATE/DELETE events for the given KRI, newest first.")
+    public ResponseEntity<List<com.internship.tool.dto.KriHistoryResponse>> getHistory(
+            @Parameter(description = "KRI ID") @PathVariable Long id) {
+        return ResponseEntity.ok(kriService.getHistory(id));
+    }
+
+    // ── Day 14: Soft Delete / Archive ─────────────────────────────────────────
+
+    @PatchMapping("/{id}/archive")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Soft-delete (archive) a KRI  [ADMIN only]",
+               description = "Marks the KRI as deleted without removing it from the database. Use DELETE for permanent removal.")
+    public ResponseEntity<KriResponse> archive(
+            @Parameter(description = "KRI ID") @PathVariable Long id) {
+        return ResponseEntity.ok(kriService.archiveKri(id));
+    }
 }

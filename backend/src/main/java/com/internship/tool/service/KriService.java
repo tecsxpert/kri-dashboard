@@ -5,8 +5,9 @@ import com.internship.tool.dto.*;
 import java.util.List;
 
 /**
- * Service interface defining business operations for KRI management.
- * Day 7: Added search with pagination, CSV export.
+ * Service interface for KRI business operations.
+ * Day 7  : Pagination, CSV export
+ * Day 12 : Audit history
  */
 public interface KriService {
 
@@ -24,11 +25,14 @@ public interface KriService {
 
     void delete(Long id);
 
-    // ── Day 7 ──────────────────────────────────────────────────────────────────
-
-    /** Paginated + filtered search */
+    // Day 7
     PagedKriResponse search(KriFilterRequest filter);
 
-    /** Export KRIs as CSV bytes (filtered by status, or all if status is null) */
     byte[] exportCsv(String status);
+
+    // Day 12
+    List<KriHistoryResponse> getHistory(Long kriId);
+
+    // Day 14: Soft Delete — marks as deleted but keeps DB record
+    KriResponse archiveKri(Long id);
 }
