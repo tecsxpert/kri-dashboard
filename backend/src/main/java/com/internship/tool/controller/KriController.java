@@ -133,6 +133,25 @@ public class KriController {
         return new ResponseEntity<>(csv, headers, HttpStatus.OK);
     }
 
+    // ── Day 17: Excel Export ──────────────────────────────────────────────────
+
+    @GetMapping("/export/excel")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Export KRIs as Excel (.xlsx) file")
+    public ResponseEntity<byte[]> exportExcel(
+            @RequestParam(required = false) String status) {
+
+        byte[] excel = kriService.exportExcel(status);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDisposition(
+                ContentDisposition.attachment().filename("kri-export.xlsx").build());
+        headers.setContentLength(excel.length);
+
+        return new ResponseEntity<>(excel, headers, HttpStatus.OK);
+    }
+
     // ── Day 12: Audit History ─────────────────────────────────────────────────
 
     @GetMapping("/{id}/history")
@@ -153,5 +172,24 @@ public class KriController {
     public ResponseEntity<KriResponse> archive(
             @Parameter(description = "KRI ID") @PathVariable Long id) {
         return ResponseEntity.ok(kriService.archiveKri(id));
+    // ── Day 18: Bulk Operations ───────────────────────────────────────────────
+
+    @PostMapping("/bulk")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Bulk create KRIs  [ADMIN only]",
+               description = "Create multiple KRIs in a single request")
+    public ResponseEntity<List<KriResponse>> bulkCreate(
+            @Valid @RequestBody List<KriRequest> requests) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(kriService.bulkCreate(requests));
+    }
+
+    @PatchMapping("/bulk/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Bulk update KRI statuses  [ADMIN only]",
+               description = "Update the status of multiple KRIs at once")
+    public ResponseEntity<Void> bulkUpdateStatus(
+            @Valid @RequestBody com.internship.tool.dto.BulkStatusUpdateRequest request) {
+        kriService.bulkUpdateStatus(request.getIds(), request.getNewStatus());
+        return ResponseEntity.noContent().build();
     }
 }

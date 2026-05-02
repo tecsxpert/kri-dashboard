@@ -30,6 +30,13 @@ public interface KriService {
 
     byte[] exportCsv(String status);
 
+    // Day 17
+    byte[] exportExcel(String status);
+
+    // Day 18: Bulk Operations
+    List<KriResponse> bulkCreate(List<KriRequest> requests);
+    void bulkUpdateStatus(List<Long> ids, String newStatus);
+
     // Day 12
     List<KriHistoryResponse> getHistory(Long kriId);
 
