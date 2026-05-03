@@ -172,6 +172,8 @@ public class KriController {
     public ResponseEntity<KriResponse> archive(
             @Parameter(description = "KRI ID") @PathVariable Long id) {
         return ResponseEntity.ok(kriService.archiveKri(id));
+    }
+
     // ── Day 18: Bulk Operations ───────────────────────────────────────────────
 
     @PostMapping("/bulk")
