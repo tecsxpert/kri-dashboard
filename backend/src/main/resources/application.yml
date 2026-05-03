@@ -20,5 +20,29 @@ spring:
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
 
+server:
+  port: 8080
+
+# Actuator — health & monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: KRI Dashboard
+    description: Key Risk Indicator Management System
+    version: 1.0.0
+    developer: Varad (Java Developer 2)
+
+# JWT config (from main branch)
 jwt:
   secret: ${JWT_SECRET}

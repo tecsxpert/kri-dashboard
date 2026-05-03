@@ -26,11 +26,11 @@ public class OpenApiConfig {
                                 .name("Varad — Java Developer 2")
                                 .email("varad@internship.com"))
                         .license(new License().name("MIT")))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Auth"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("Bearer Auth",
+                        .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme()
-                                        .name("Bearer Auth")
+                                        .name("bearerAuth")
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")

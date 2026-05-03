@@ -32,6 +32,19 @@ A comprehensive **Key Risk Indicator (KRI) Dashboard** REST API built with Sprin
 | Day 4 | JWT Security — UserEntity, AuthController, SecurityConfig | ✅ Done |
 | Day 5 | Redis caching, Email alerts, Thymeleaf template, Scheduler | ✅ Done |
 | Day 6 | AOP Audit logging, Unit tests, README, final polish | ✅ Done |
+| Day 7 | Pagination & Filtering, CSV Export, Actuator endpoints | ✅ Done |
+| Day 8 | Integration Tests (MockMvc), Dockerfile, docker-compose | ✅ Done |
+| Day 9 | Role-Based Access Control (RBAC), Admin Controller | ✅ Done |
+| Day 10 | Dashboard Analytics API, KRI statistics summary | ✅ Done |
+| Day 11 | GitHub Actions CI/CD Pipeline, CONTRIBUTING.md | ✅ Done |
+| Day 12 | KRI Audit History (kri_history table, V5 migration, history API) | ✅ Done |
+| Day 13 | Rate Limiting (Bucket4j), ApiResponse<T> wrapper | ✅ Done |
+| Day 14 | Soft Delete, Production profile, Custom Health Indicator (V6 migration) | ✅ Done |
+| Day 15 | DashboardService unit tests, Request logging filter, Final cleanup | ✅ Done |
+| Day 16 | In-app Notifications System (V7 migration, Notification entity, Auto-alerts) | ✅ Done |
+| Day 17 | Excel Export using Apache POI | ✅ Done |
+| Day 18 | Bulk Operations (Bulk Create & Bulk Status Update) | ✅ Done |
+| Day 19 | Security hardening (CORS config, Security headers, Method security) | ✅ Done |
 
 ---
 
@@ -94,13 +107,43 @@ backend/
 ### 📊 KRI Management
 | Method | Endpoint                     | Description                  | Auth Required |
 |--------|------------------------------|------------------------------|---------------|
-| POST   | `/api/v1/kri`                | Create new KRI               | ✅ Yes        |
+| POST   | `/api/v1/kri`                | Create new KRI               | ✅ Yes (ADMIN)|
 | GET    | `/api/v1/kri`                | Get all KRIs                 | ✅ Yes        |
 | GET    | `/api/v1/kri/{id}`           | Get KRI by ID                | ✅ Yes        |
 | GET    | `/api/v1/kri/status/{status}`| Get KRIs by status           | ✅ Yes        |
 | GET    | `/api/v1/kri/at-risk`        | Get BREACH/NEAR_BREACH KRIs  | ✅ Yes        |
-| PUT    | `/api/v1/kri/{id}`           | Update KRI                   | ✅ Yes        |
-| DELETE | `/api/v1/kri/{id}`           | Delete KRI                   | ✅ Yes        |
+| GET    | `/api/v1/kri/search`         | Paginated & filtered search  | ✅ Yes        |
+| PUT    | `/api/v1/kri/{id}`           | Update KRI                   | ✅ Yes (ADMIN)|
+| DELETE | `/api/v1/kri/{id}`           | Delete KRI                   | ✅ Yes (ADMIN)|
+| GET    | `/api/v1/kri/export/csv`     | Export KRIs to CSV           | ✅ Yes        |
+| GET    | `/api/v1/kri/export/excel`   | Export KRIs to Excel         | ✅ Yes        |
+| POST   | `/api/v1/kri/bulk`           | Bulk create KRIs             | ✅ Yes (ADMIN)|
+| PATCH  | `/api/v1/kri/bulk/status`    | Bulk update KRI statuses     | ✅ Yes (ADMIN)|
+| PATCH  | `/api/v1/kri/{id}/archive`   | Soft-delete a KRI            | ✅ Yes (ADMIN)|
+| GET    | `/api/v1/kri/{id}/history`   | Get audit history of a KRI   | ✅ Yes        |
+
+### 🔔 In-App Notifications
+| Method | Endpoint                            | Description                  | Auth Required |
+|--------|-------------------------------------|------------------------------|---------------|
+| GET    | `/api/v1/notifications`             | Get all notifications        | ✅ Yes        |
+| GET    | `/api/v1/notifications/unread`      | Get unread notifications     | ✅ Yes        |
+| GET    | `/api/v1/notifications/unread/count`| Get unread count             | ✅ Yes        |
+| PATCH  | `/api/v1/notifications/{id}/read`   | Mark notification as read    | ✅ Yes        |
+| PATCH  | `/api/v1/notifications/read-all`    | Mark all as read             | ✅ Yes        |
+
+### 📈 Analytics & Dashboard
+| Method | Endpoint                     | Description                  | Auth Required |
+|--------|------------------------------|------------------------------|---------------|
+| GET    | `/api/v1/dashboard/summary`  | Get full KRI statistics      | ✅ Yes        |
+
+### 👨‍💼 Admin Management
+| Method | Endpoint                     | Description                  | Auth Required |
+|--------|------------------------------|------------------------------|---------------|
+| GET    | `/api/v1/admin/users`        | List all users               | ✅ Yes (ADMIN)|
+| GET    | `/api/v1/admin/users/{id}`   | Get user details             | ✅ Yes (ADMIN)|
+| PATCH  | `/api/v1/admin/users/{id}/promote` | Promote to ADMIN       | ✅ Yes (ADMIN)|
+| PATCH  | `/api/v1/admin/users/{id}/demote`  | Demote to USER         | ✅ Yes (ADMIN)|
+| DELETE | `/api/v1/admin/users/{id}`   | Delete user account          | ✅ Yes (ADMIN)|
 
 ---
 

@@ -2,12 +2,15 @@ package com.internship.tool.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
+
 
 /**
  * Centralized exception handler for all REST controllers.
@@ -23,6 +26,32 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.builder()
                         .status(404)
                         .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .timestamp(LocalDateTime.now())
+                        .build());
+    }
+
+    // Day 9 — RBAC: 403 Forbidden
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex,
+                                                             HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.builder()
+                        .status(403)
+                        .message("Access denied: you don't have permission to perform this action")
+                        .path(request.getRequestURI())
+                        .timestamp(LocalDateTime.now())
+                        .build());
+    }
+
+    // Day 9 — RBAC: 401 Unauthorized
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(AuthenticationException ex,
+                                                             HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .status(401)
+                        .message("Authentication required: " + ex.getMessage())
                         .path(request.getRequestURI())
                         .timestamp(LocalDateTime.now())
                         .build());
