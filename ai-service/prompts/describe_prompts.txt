@@ -1,8 +1,0 @@
-prompt = f"""
-Give output ONLY in JSON format with:
-- title
-- description (max 5 lines)
-- risk_level (Low, Medium, High)
-
-Topic: {user_input}
-"""

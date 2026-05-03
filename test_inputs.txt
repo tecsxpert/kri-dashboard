@@ -1,0 +1,9 @@
+hello
+what is AI
+explain redis
+what is fastapi
+what is chromadb
+how caching works
+what is uvicorn
+explain vector database
+give python example
