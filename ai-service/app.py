@@ -1,3 +1,4 @@
+from flask_talisman import Talisman
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from flask import Flask, request, jsonify
 from sanitizer import sanitize_input
@@ -5,6 +6,7 @@ from sanitizer import sanitize_input
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 app = Flask(__name__)
+Talisman(app)
 app.config["JWT_SECRET_KEY"] = "super-secret-key"
 jwt = JWTManager(app)
 @app.route('/')

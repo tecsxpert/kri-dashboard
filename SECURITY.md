@@ -339,3 +339,29 @@ The application meets the required security standards for the current scope.
 ### Conclusion
 Application successfully passed full OWASP ZAP active scan with zero vulnerabilities.
 All required security controls are effective.
+
+##  Day 12: Security Hardening with Flask-Talisman
+
+###  Enhancements Applied
+- Integrated Flask-Talisman for automatic security headers
+- Enabled protection against common web vulnerabilities
+
+---
+
+###  Re-scan Results (OWASP ZAP)
+- Critical: None
+- High: None
+- Medium: None / Minor
+- Low: Informational only
+
+---
+
+###  Outcome
+- All security headers enforced
+- No remaining Critical or High vulnerabilities
+
+---
+
+###  Conclusion
+Application security strengthened using Flask-Talisman.
+ZAP re-scan confirms zero Critical/High issues
